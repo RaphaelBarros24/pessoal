@@ -1,75 +1,79 @@
 # Saldo Familiar
 
-Aplicativo de controle financeiro familiar para **Windows 10 e 11 de 64 bits**, com banco SQLite próprio e funcionamento offline. Cada familiar possui seu login no aplicativo e todos podem editar o mesmo orçamento.
+Controle financeiro familiar offline para Windows 10 e 11 de 64 bits, com SQLite e runtime incluídos. Cada familiar tem seu login e todos podem editar o orçamento.
 
-## Instalar e começar
+## Instalar ou atualizar
 
-1. Baixe `Saldo-Familiar-0.1.0-Windows-x64.exe` na [página de versões](https://github.com/RaphaelBarros24/pessoal/releases).
-2. Execute o instalador e escolha a pasta de instalação. Não é necessário instalar Node.js, Python ou um servidor de banco de dados.
-3. Abra **Saldo Familiar**, crie o primeiro usuário e guarde o código de recuperação exibido uma única vez.
-4. Em **Família e backup**, cadastre os outros familiares. Cada novo usuário também recebe um código individual de recuperação.
-5. Cadastre receitas e despesas, defina limites de orçamento e acompanhe o dashboard.
+Baixe `Saldo-Familiar-0.2.0-Windows-x64.exe` na [página da versão](https://github.com/RaphaelBarros24/pessoal/releases/tag/v0.2.0). Não exige Node.js, Python ou servidor externo.
 
-O instalador desta versão não possui assinatura digital comercial. O Windows pode pedir confirmação do editor ao executá-lo.
+Para atualizar, feche o aplicativo e execute o instalador na mesma conta do Windows. Não é necessário desinstalar. A identificação e o caminho do banco permanecem iguais. Antes da migração aditiva, o aplicativo cria uma cópia integral em `backups/antes-atualizacao-v1-*.sqlite`. Usuários, senhas, lançamentos, pagamentos, notas, categorias e limites são preservados. Backups 0.1.0 continuam aceitos.
 
-## Recursos da primeira versão
+Na primeira instalação, crie um usuário e guarde o código de recuperação exibido uma única vez. Em **Família e backup**, cadastre os demais familiares. Cadastre receitas/despesas e limites mensais por categoria.
 
-- Login offline, senhas armazenadas com hash scrypt e recuperação por código individual de uso único.
-- Receitas e despesas com cadastro, edição, exclusão, categoria, vencimento, pagamento e observações.
-- Orçamento compartilhado com limites mensais por categoria e sugestões baseadas em regras locais.
-- Dashboard com receitas, despesas, saldo previsto, despesas pendentes, histórico de seis meses e distribuição por categoria.
-- Pesquisa e filtros de lançamentos; criação de categorias de receitas e despesas.
-- Relatórios mensais em CSV, compatível com planilhas, e PDF para impressão.
-- Backup manual, restauração com validação do arquivo e backup automático local por dia, atualizado a cada alteração, com retenção de 30 cópias diárias.
+## Recursos
 
-Os valores estão em reais. O mês de contabilização é o **mês do vencimento**, mesmo quando o pagamento ocorre em outro mês. O saldo previsto representa receitas menos despesas cadastradas, não o saldo de uma conta bancária.
+- Login offline com hash scrypt e recuperação individual de uso único.
+- Receitas, despesas, edição, exclusão, categorias, vencimento, pagamento e observações.
+- Parcelas automáticas e meios de pagamento com acumulados mensais.
+- Cartões com fechamento/vencimento, faturas e registro de pagamento.
+- Dashboard, histórico de seis meses, filtros, limites e sugestões por regras locais.
+- Relatórios CSV/PDF, backup manual, restauração validada e backup diário atualizado a cada alteração, com retenção de 30 cópias diárias.
 
-Cartões, geração automática de parcelas, recorrências, importação de extratos e comprovantes ficam fora desta primeira versão. É possível lançar cada parcela manualmente no seu vencimento.
+## Parcelas e cartões
 
-## Dados, acesso e backup
+Informe o **valor total** e o número de parcelas (até 120). A divisão é em centavos, com diferenças nas primeiras parcelas. Dias inexistentes são ajustados ao último dia do mês, mantendo o dia original nos seguintes.
 
-O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`. As cópias automáticas ficam na subpasta `backups`. A instalação é por usuário do Windows: os logins familiares compartilham o banco dentro dessa mesma conta do Windows. Contas diferentes do Windows possuem bancos separados.
+Escolha Pix, dinheiro, débito, crédito, transferência, boleto ou outro. Lançamentos antigos ficam como **Não informado** até serem editados. Lançamentos comuns entram no orçamento pelo vencimento, independentemente do mês de pagamento.
 
-O aplicativo funciona sem internet e não sincroniza entre máquinas. Banco e backups **não são criptografados**; o login protege o acesso pelo aplicativo. Guarde os códigos de recuperação e os backups em local seguro. Copie periodicamente um backup para outro dispositivo.
+Cadastre o cartão por nome, fechamento e vencimento. Compras **no dia do fechamento** entram no ciclo seguinte. Fechamento 25 e vencimento 5: compra em 24/09 vence em 05/10; compra em 25/09 vence em 05/11.
 
-Ao restaurar, o orçamento e as contas de acesso atuais são substituídos pelos dados do backup. Uma cópia adicional do banco anterior é preservada antes da restauração. Faça login novamente com uma conta existente no backup.
+Uma compra de R$ 300 em três parcelas em 24/09 consome R$ 100 dos orçamentos de setembro, outubro e novembro. Nesse exemplo, as faturas vencem em outubro, novembro e dezembro. A fatura aparece como pagamento previsto, sem duplicar a despesa do orçamento. O saldo previsto representa receitas menos despesas cadastradas, não o saldo bancário.
 
-A desinstalação preserva o banco. O instalador e o código-fonte não incluem dados reais nem usuários de demonstração.
+Consulte as compras da fatura e marque-a como paga. Editar/excluir uma parcela altera somente ela; excluir a série remove todas as parcelas ainda cadastradas daquela compra. Para mudar a quantidade, exclua a série e cadastre novamente. Alterações de fechamento/vencimento do cartão afetam novas compras; vencimentos existentes são preservados.
 
-## Desenvolvimento
+No CSV, some **Despesa contabilizada (R$)** para evitar duplicação de faturas. **Fatura prevista (R$)** separa pagamentos do cartão. Recorrências, importação de extratos e comprovantes ainda não estão incluídos.
 
-Requer Node.js 24 e npm na máquina de desenvolvimento.
+## Dados e backup
+
+O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`, e as cópias em `backups`. Familiares compartilham dados dentro da mesma conta do Windows; contas distintas do Windows têm bancos separados. Não há sincronização entre máquinas.
+
+Banco e backups não são criptografados; o login protege o acesso pelo aplicativo. Copie periodicamente um backup para outro dispositivo. Restaurar substitui dados e contas pelo backup, preserva uma cópia anterior e exige novo login. A desinstalação preserva o banco. O instalador não possui assinatura digital comercial. Dados reais e usuários de demonstração não acompanham a distribuição.
+
+## Desenvolvimento e verificação
+
+Requer Node.js 24 e npm no desenvolvimento:
 
 ```powershell
 npm ci
 node node_modules/electron/install.js
 npm start
-```
-
-O segundo comando garante a instalação do runtime Electron quando o ambiente bloqueia scripts automáticos das dependências.
-
-```powershell
 npm test
 npm run test:ui
 npm run dist
 ```
 
-O instalador completo é gerado em `release/`. O teste da interface usa exclusivamente dados fictícios em `.local-data/`, exercita cadastro e lançamentos pelas telas, navegação, exportação CSV/PDF e backup. Esses arquivos ficam fora do Git.
+O comando de instalação do Electron garante o runtime quando scripts automáticos das dependências estão bloqueados. Instalador em `release/`; testes fictícios em `.local-data/`, fora do Git.
 
-### Verificação da versão 0.1.0
+Teste de atualização pelas telas:
 
-Testes das operações e da interface passaram. A versão empacotada e o instalador foram executados nesta máquina Windows 11, incluindo instalação, uso do aplicativo instalado, exportação de relatórios e desinstalação. O dashboard e o PDF exportado foram conferidos visualmente. Windows 10 é a compatibilidade prevista e ainda não foi testado diretamente.
+```powershell
+node tests/prepare-upgrade.cjs
+node desktop/launch.cjs --smoke-test --upgrade-test
+```
 
-O arquivo `SHA256SUMS.txt` anexado à versão permite verificar a integridade do instalador baixado.
+Na 0.2.0, sete testes das operações públicas passaram, incluindo migração, parcelas, centavos, fechamento e faturas sem duplicação. Testes das telas passaram pelo runtime de desenvolvimento, incluindo banco antigo fictício. Dashboard, formulário e PDF conferidos visualmente. A política de Controle de Aplicativo desta máquina bloqueou o novo binário empacotado; sua execução e a instalação 0.2.0 permanecem pendentes de validação em outro Windows. Windows 10 ainda não foi testado diretamente. Na 0.1.0, instalação, uso e desinstalação foram validados no Windows 11.
+
+O `SHA256SUMS.txt` anexado permite verificar o instalador.
 
 ## Estrutura
 
-- `desktop/store.cjs`: operações de acesso, SQLite, lançamentos, orçamento e backups.
-- `desktop/main.cjs`: janela do aplicativo, validação de mensagens, diálogos e exportação de relatórios.
-- `desktop/preload.cjs`: interface limitada entre as telas e as operações do aplicativo.
-- `ui/`: interface local, estilos e gráficos.
-- `tests/`: testes das operações públicas.
-- `docs/requisitos.md`: decisões confirmadas com o usuário.
+- `desktop/store.cjs`: acesso, SQLite, lançamentos, cartões, orçamento e backups.
+- `desktop/main.cjs`: janela, mensagens, diálogos e exportação.
+- `desktop/reports.cjs`: CSV e HTML para PDF.
+- `desktop/preload.cjs`: interface limitada entre telas e operações.
+- `ui/`: telas, estilos e gráficos.
+- `tests/`: operações públicas e banco fictício antigo.
+- `docs/requisitos.md`: decisões confirmadas.
 - `docs/agents/`: configuração das skills de Matt Pocock.
 
-Referências de produto: [Expensify](https://www.expensify.com/) e [Brex](https://www.brex.com/product/expense-management), adaptadas ao controle familiar offline.
+Referências de produto: [Expensify](https://www.expensify.com/) e [Brex](https://www.brex.com/product/expense-management), adaptadas ao uso familiar offline.

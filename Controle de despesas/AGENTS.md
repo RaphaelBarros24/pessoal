@@ -34,14 +34,15 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 
 ## Estado da última sessão
 
-- Desenvolvida a primeira versão do Saldo Familiar: aplicativo Windows offline com Electron e SQLite incluído.
-- Implementados login individual, recuperação por código de uso único, receitas/despesas, edição/exclusão compartilhada, categorias, limites mensais, dashboard, histórico de seis meses, sugestões locais e relatórios CSV/PDF.
-- Implementados backup manual, backup automático diário atualizado a cada alteração (30 cópias diárias) e restauração validada com cópia de segurança anterior.
-- Confirmados português do Brasil, reais, competência por vencimento, uso familiar e Windows 10/11 de 64 bits. Todos os logins do aplicativo compartilham o banco dentro da mesma conta do Windows.
-- Testes das operações públicas passaram; teste da interface passou com cadastro e lançamentos pelas telas, navegação, exportações e backup. PDF e dashboard conferidos visualmente.
-- Instalador completo gerado; instalação, teste do aplicativo instalado e desinstalação de teste passaram nesta máquina Windows 11. Windows 10 ainda não foi testado diretamente.
-- Dependências verificadas com `npm audit`: zero vulnerabilidades conhecidas no momento da verificação.
-- Documentação de uso, requisitos e notas da versão adicionadas. Entrega da versão: tag `v0.1.0`, instalador `Saldo-Familiar-0.1.0-Windows-x64.exe` e `SHA256SUMS.txt` nos anexos da release.
+- Atualização 0.2.0: parcelas automáticas pelo valor total, meios de pagamento e acumulados, cartões com fechamento/vencimento e faturas por cartão e mês.
+- Compras no dia do fechamento entram no próximo ciclo. Parcelas do cartão consomem orçamento desde o mês da compra; faturas são pagamentos sem duplicação. Demais lançamentos continuam por vencimento.
+- Edição/exclusão individual de parcelas, exclusão da série, detalhamento e pagamento/reabertura de fatura. Configurações de cartão alteradas afetam novas compras.
+- Migração aditiva de schema 1 para 2 com cópia integral anterior obrigatória; usuários, senhas, IDs, pagamentos, notas, categorias e limites preservados. Restauração aceita bancos antigos; versões futuras recusadas sem alteração.
+- Mantidos caminho do banco, identidade do aplicativo e preservação de dados na desinstalação. Todos os logins compartilham dados dentro da mesma conta do Windows.
+- Sete testes públicos passaram, incluindo regressões, migração, recuperação, backup/restauração, centavos, parcelas em meses curtos, fechamento e faturas sem duplicação.
+- Testes das telas passaram no runtime de desenvolvimento com cadastro, parcelas, cartões, edição pela fatura, pagamento, exportações e backup; teste de atualização com banco antigo fictício passou. Dashboard, formulário e PDF conferidos visualmente.
+- Instalador 0.2.0 gerado. A política de Controle de Aplicativo do Windows bloqueou o novo executável empacotado: execução do binário e instalação desta atualização permanecem pendentes em outro Windows. Não foi alterado o banco pessoal nem a instalação existente para testes. Windows 10 não testado diretamente.
+- Documentação atualizada. Entrega preparada para tag `v0.2.0`, instalador `Saldo-Familiar-0.2.0-Windows-x64.exe` e `SHA256SUMS.txt`.
 - Este projeto usa o repositório Git da pasta superior `Pessoal`. Destino autorizado: `https://github.com/RaphaelBarros24/pessoal.git`.
 - Banco e backups são locais e não criptografados; o instalador não possui assinatura digital comercial. Dados reais, dependências instaladas e artefatos de teste ficam fora do Git.
-- Próximos passos opcionais: validar em Windows 10 e, se solicitado, ampliar para cartões, geração de parcelas, recorrências e importação. Esses recursos ficam fora da versão atual confirmada.
+- Próximo passo: validar instalador e binário 0.2.0 em Windows que permita execução e em Windows 10. Recorrências e importação continuam fora do escopo atual.

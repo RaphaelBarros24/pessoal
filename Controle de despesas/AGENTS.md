@@ -42,7 +42,7 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 - Sete testes públicos passaram, incluindo regressões, migração, recuperação, backup/restauração, centavos, parcelas em meses curtos, fechamento e faturas sem duplicação.
 - Testes das telas passaram no runtime de desenvolvimento com cadastro, parcelas, cartões, edição pela fatura, pagamento, exportações e backup; teste de atualização com banco antigo fictício passou. Dashboard, formulário e PDF conferidos visualmente.
 - Instalador 0.2.0 gerado. A política de Controle de Aplicativo do Windows bloqueou o novo executável empacotado: execução do binário e instalação desta atualização permanecem pendentes em outro Windows. Não foi alterado o banco pessoal nem a instalação existente para testes. Windows 10 não testado diretamente.
-- Documentação atualizada. Entrega preparada para tag `v0.2.0`, instalador `Saldo-Familiar-0.2.0-Windows-x64.exe` e `SHA256SUMS.txt`.
+- Código enviado no commit `7de6a7f`. Release `v0.2.0` publicada com instalador `Saldo-Familiar-0.2.0-Windows-x64.exe` e `SHA256SUMS.txt`; ambos os anexos conferidos como uploaded. SHA-256 remoto do instalador corresponde ao arquivo local: `e49628e66672faff0edbd71c886f78a3ca725b781fe6726a2d6bcce27782f0a1`.
 - Este projeto usa o repositório Git da pasta superior `Pessoal`. Destino autorizado: `https://github.com/RaphaelBarros24/pessoal.git`.
 - Banco e backups são locais e não criptografados; o instalador não possui assinatura digital comercial. Dados reais, dependências instaladas e artefatos de teste ficam fora do Git.
 - Próximo passo: validar instalador e binário 0.2.0 em Windows que permita execução e em Windows 10. Recorrências e importação continuam fora do escopo atual.

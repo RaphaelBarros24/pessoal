@@ -14,6 +14,12 @@
 
 ## Agent skills
 
+### Instalação
+
+As 37 skills de `mattpocock/skills` estão instaladas globalmente em `C:/Users/rapha/.codex/skills`, incluindo as categorias engineering, productivity, misc e in-progress. Referência instalada: `3cca18b368ae95cdbdebbff572ccafa662551015`.
+
+As skills ficam disponíveis ao Codex no próximo turno. As skills da categoria in-progress estão em desenvolvimento no repositório do autor.
+
 ### Issue tracker
 
 As tarefas são acompanhadas em `RaphaelBarros24/pessoal` no GitHub. Consulte `docs/agents/issue-tracker.md`.
@@ -24,9 +30,10 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 
 ## Estado da última sessão
 
-- Criados `AGENTS.md` e `CLAUDE.md` com instruções idênticas e a rotina de encerramento solicitada pelo usuário.
-- Criadas as convenções de tarefas e documentação das skills de engenharia de Matt Pocock.
+- Instaladas as 37 skills oficiais de Matt Pocock com o instalador do Codex, sem substituir skills preexistentes.
+- Verificada a presença do arquivo `SKILL.md` nas 37 instalações.
+- Atualizados `AGENTS.md` e `CLAUDE.md` com instruções idênticas e o registro da instalação.
 - Este projeto usa o repositório Git da pasta superior `Pessoal`. Destino autorizado: `https://github.com/RaphaelBarros24/pessoal.git`.
 - Autenticação do GitHub confirmada para `RaphaelBarros24` fora do sandbox.
-- Preparado o primeiro commit com os quatro arquivos de configuração deste projeto. Ao encerrar as próximas sessões, atualize ambos os arquivos, faça commit e envie para o mesmo remoto.
-- As skills de Matt Pocock ainda não foram instaladas; os arquivos atuais configuram as convenções do projeto.
+- O primeiro envio da configuração foi concluído no commit `9e83a8d`. Esta sessão registra a instalação para envio ao mesmo remoto.
+- A skill `triage` está instalada; a escolha dos rótulos de triagem ainda não foi configurada. Nenhum rótulo ou issue foi criado no GitHub nesta sessão.

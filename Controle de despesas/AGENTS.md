@@ -34,10 +34,12 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 
 ## Estado da última sessão
 
-- Concluído o setup das skills: GitHub Issues, rótulos padrão de triagem confirmados pelo usuário e domínio single-context.
-- Atualizados `AGENTS.md` e `CLAUDE.md` e criado `docs/agents/triage-labels.md`. Nenhuma issue ou rótulo remoto foi criado nesta sessão.
+- Setup das skills concluído e publicado no commit `b5be9c7`: GitHub Issues, rótulos padrão e domínio single-context.
+- Confirmados pelo usuário: Windows como primeira plataforma, banco local com login offline por máquina e orçamento familiar compartilhado.
+- Atualizado `docs/requisitos.md` com essas escolhas. O compartilhamento familiar ocorre no banco da mesma máquina, sem sincronização entre máquinas.
 - Este projeto usa o repositório Git da pasta superior `Pessoal`. Destino autorizado: `https://github.com/RaphaelBarros24/pessoal.git`.
 - Autenticação do GitHub confirmada para `RaphaelBarros24` fora do sandbox.
 - O usuário solicitou desenvolver um software de despesas pessoais com banco próprio, login, dashboard, análises mensais, sugestões de orçamento e cadastro/edição/exclusão de despesas.
 - A entrega deve incluir instalador com todos os arquivos necessários e publicação do projeto completo no GitHub. Referências: Expensify e Brex.
-- Pendente: confirmar sistemas operacionais, funcionamento local ou sincronizado, usuários individuais ou familiares e escopo financeiro da primeira versão antes de escolher a arquitetura.
+- Pendente: confirmar escopo da primeira versão, contas e permissões familiares, mês de contabilização das despesas e padrões de idioma, moeda e sugestões offline.
+- Antes da entrega, definir também backup/restauração, recuperação de acesso e versões de Windows suportadas; implementar e verificar o instalador completo.

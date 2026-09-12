@@ -11,12 +11,14 @@
 - Publicação do projeto completo no GitHub ao final do desenvolvimento.
 - Usar Expensify e Brex como referências de produto.
 - Esclarecer com o usuário as decisões ainda desconhecidas.
+- Primeira plataforma: Windows.
+- Banco de dados local, incluído no aplicativo, com login offline por máquina.
+- Uso familiar, com orçamento compartilhado no banco da mesma máquina. Sincronização entre máquinas não faz parte da configuração escolhida.
 
 ## Decisões pendentes
 
-- Sistemas operacionais suportados e formatos de instalador.
-- Banco local com login offline ou sincronização entre máquinas.
-- Uso individual ou familiar com orçamento compartilhado.
+- Versões e arquiteturas de Windows suportadas e formato do instalador.
+- Contas individuais por familiar ou login único, com respectivas permissões.
 - Receitas, categorias, limites de orçamento e relatórios na primeira versão.
 - Cartões, parcelas, despesas recorrentes, importação de extratos e comprovantes.
 - Moeda, regras de competência, autenticação, recuperação de acesso, backup e exportação.

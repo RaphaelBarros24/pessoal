@@ -34,12 +34,14 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 
 ## Estado da última sessão
 
-- Setup das skills concluído e publicado no commit `b5be9c7`: GitHub Issues, rótulos padrão e domínio single-context.
-- Confirmados pelo usuário: Windows como primeira plataforma, banco local com login offline por máquina e orçamento familiar compartilhado.
-- Atualizado `docs/requisitos.md` com essas escolhas. O compartilhamento familiar ocorre no banco da mesma máquina, sem sincronização entre máquinas.
+- Desenvolvida a primeira versão do Saldo Familiar: aplicativo Windows offline com Electron e SQLite incluído.
+- Implementados login individual, recuperação por código de uso único, receitas/despesas, edição/exclusão compartilhada, categorias, limites mensais, dashboard, histórico de seis meses, sugestões locais e relatórios CSV/PDF.
+- Implementados backup manual, backup automático diário atualizado a cada alteração (30 cópias diárias) e restauração validada com cópia de segurança anterior.
+- Confirmados português do Brasil, reais, competência por vencimento, uso familiar e Windows 10/11 de 64 bits. Todos os logins do aplicativo compartilham o banco dentro da mesma conta do Windows.
+- Testes das operações públicas passaram; teste da interface passou com cadastro e lançamentos pelas telas, navegação, exportações e backup. PDF e dashboard conferidos visualmente.
+- Instalador completo gerado; instalação, teste do aplicativo instalado e desinstalação de teste passaram nesta máquina Windows 11. Windows 10 ainda não foi testado diretamente.
+- Dependências verificadas com `npm audit`: zero vulnerabilidades conhecidas no momento da verificação.
+- Documentação de uso, requisitos e notas da versão adicionadas. Entrega da versão: tag `v0.1.0`, instalador `Saldo-Familiar-0.1.0-Windows-x64.exe` e `SHA256SUMS.txt` nos anexos da release.
 - Este projeto usa o repositório Git da pasta superior `Pessoal`. Destino autorizado: `https://github.com/RaphaelBarros24/pessoal.git`.
-- Autenticação do GitHub confirmada para `RaphaelBarros24` fora do sandbox.
-- O usuário solicitou desenvolver um software de despesas pessoais com banco próprio, login, dashboard, análises mensais, sugestões de orçamento e cadastro/edição/exclusão de despesas.
-- A entrega deve incluir instalador com todos os arquivos necessários e publicação do projeto completo no GitHub. Referências: Expensify e Brex.
-- Pendente: confirmar escopo da primeira versão, contas e permissões familiares, mês de contabilização das despesas e padrões de idioma, moeda e sugestões offline.
-- Antes da entrega, definir também backup/restauração, recuperação de acesso e versões de Windows suportadas; implementar e verificar o instalador completo.
+- Banco e backups são locais e não criptografados; o instalador não possui assinatura digital comercial. Dados reais, dependências instaladas e artefatos de teste ficam fora do Git.
+- Próximos passos opcionais: validar em Windows 10 e, se solicitado, ampliar para cartões, geração de parcelas, recorrências e importação. Esses recursos ficam fora da versão atual confirmada.

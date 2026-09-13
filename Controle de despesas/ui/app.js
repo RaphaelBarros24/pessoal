@@ -5,7 +5,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;
 const money = value => (value / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const displayDate = date => date ? date.split('-').reverse().join('/') : 'Pendente';
 const monthLabel = month => new Date(`${month}-01T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-const icons = { dashboard: '◫', entries: '↔', budgets: '◎', cards: '▱', categories: '▦', reports: '▤', family: '♧' };
+const icons = { dashboard: '◫', entries: '↔', budgets: '◎', cards: '▱', imports: '⇧', categories: '▦', reports: '▤', family: '♧' };
 const paymentLabels = { unspecified: 'Não informado', pix: 'Pix', cash: 'Dinheiro', debit_card: 'Cartão de débito', credit_card: 'Cartão de crédito', bank_transfer: 'Transferência', boleto: 'Boleto', other: 'Outro' };
 function notify(message, error = false) {
   document.querySelector('.toast')?.remove();
@@ -48,8 +48,8 @@ function renderAuth() {
 async function refresh() { state.snapshot = await call('snapshot', state.month); render(); if (state.snapshot.backupWarning) notify(state.snapshot.backupWarning, true); }
 function render() {
   const s = state.snapshot;
-  const pages = { dashboard: 'Visão geral', entries: 'Lançamentos', budgets: 'Orçamento', cards: 'Cartões e faturas', categories: 'Categorias', reports: 'Relatórios', family: 'Família e backup' };
-  root.innerHTML = `<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">S</span><span>Saldo<br><b>Familiar</b></span></div><p class="nav-label">SEU ORÇAMENTO</p><nav>${Object.entries(pages).map(([key, label]) => `<button data-action="navigate" data-page="${key}" class="nav-item ${state.page === key ? 'active' : ''}"><span>${icons[key]}</span>${label}</button>`).join('')}</nav><div class="sidebar-note"><span>♡</span><strong>Pequenos hábitos,<br>grandes planos.</strong><p>O orçamento pertence<br>a toda a família.</p></div><div class="profile"><span class="avatar">${esc(s.user.name.slice(0, 1).toUpperCase())}</span><div><strong>${esc(s.user.name)}</strong><small>Orçamento compartilhado</small></div><button data-action="logout" class="icon-button" aria-label="Sair" title="Sair">↪</button></div></aside><main class="workspace"><header class="topbar"><div><span class="breadcrumb">Minha família / ${pages[state.page]}</span><h1>${state.page === 'dashboard' ? `Olá, ${esc(s.user.name.split(' ')[0])} <span class="greeting">☀</span>` : pages[state.page]}</h1><p class="muted">${state.page === 'dashboard' ? 'Veja como está o mês e planeje os próximos passos.' : 'Tudo em um só lugar, para cuidar das contas da casa.'}</p></div><div class="header-actions"><label class="month-picker"><span>Período</span><input id="month" type="month" value="${state.month}" min="1900-01" max="2199-12" aria-label="Mês do orçamento"></label><button class="primary" data-action="new-entry">+ Novo lançamento</button></div></header><div id="content">${({ dashboard, entries: entriesPage, budgets: budgetsPage, cards: cardsPage, categories: categoriesPage, reports: reportsPage, family: familyPage })[state.page]()}</div><footer class="workspace-footer"><span>● Dados locais · Sem sincronização entre máquinas</span><span>Orçamento e pagamentos · ${esc(monthLabel(state.month))}</span></footer></main></div>`;
+  const pages = { dashboard: 'Visão geral', entries: 'Lançamentos', budgets: 'Orçamento', cards: 'Cartões e faturas', imports: 'Importar fatura', categories: 'Categorias', reports: 'Relatórios', family: 'Família e backup' };
+  root.innerHTML = `<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">S</span><span>Saldo<br><b>Familiar</b></span></div><p class="nav-label">SEU ORÇAMENTO</p><nav>${Object.entries(pages).map(([key, label]) => `<button data-action="navigate" data-page="${key}" class="nav-item ${state.page === key ? 'active' : ''}"><span>${icons[key]}</span>${label}</button>`).join('')}</nav><div class="sidebar-note"><span>♡</span><strong>Pequenos hábitos,<br>grandes planos.</strong><p>O orçamento pertence<br>a toda a família.</p></div><div class="profile"><span class="avatar">${esc(s.user.name.slice(0, 1).toUpperCase())}</span><div><strong>${esc(s.user.name)}</strong><small>Orçamento compartilhado</small></div><button data-action="logout" class="icon-button" aria-label="Sair" title="Sair">↪</button></div></aside><main class="workspace"><header class="topbar"><div><span class="breadcrumb">Minha família / ${pages[state.page]}</span><h1>${state.page === 'dashboard' ? `Olá, ${esc(s.user.name.split(' ')[0])} <span class="greeting">☀</span>` : pages[state.page]}</h1><p class="muted">${state.page === 'dashboard' ? 'Veja como está o mês e planeje os próximos passos.' : 'Tudo em um só lugar, para cuidar das contas da casa.'}</p></div><div class="header-actions"><label class="month-picker"><span>Período</span><input id="month" type="month" value="${state.month}" min="1900-01" max="2199-12" aria-label="Mês do orçamento"></label><button class="primary" data-action="new-entry">+ Novo lançamento</button></div></header><div id="content">${({ dashboard, entries: entriesPage, budgets: budgetsPage, cards: cardsPage, imports: importsPage, categories: categoriesPage, reports: reportsPage, family: familyPage })[state.page]()}</div><footer class="workspace-footer"><span>● Dados locais · Sem sincronização entre máquinas</span><span>Orçamento e pagamentos · ${esc(monthLabel(state.month))}</span></footer></main></div>`;
   document.querySelector('#month').addEventListener('change', event => guarded(async () => { state.month = event.target.value; await refresh(); }));
   if (['dashboard', 'entries'].includes(state.page)) document.querySelector('.metrics').insertAdjacentHTML('afterend', paymentSummary());
   if (state.page === 'entries') {
@@ -163,6 +163,20 @@ function entryDialog(entry) {
   });
 }
 
+function importsPage() {
+  const pending = state.snapshot.pendingClassification;
+  return `<article class="panel"><div class="panel-heading"><div><h2>Importar fatura Itaú</h2><p>Selecione o Excel (.xlsx) exportado pelo Itaú e o cartão cadastrado correspondente.</p></div><button class="primary" data-action="import-itau">Selecionar planilha</button></div><p class="hint">Cada compra ou parcela da planilha será conferida antes de salvar. Pagamentos da fatura são ignorados. Não são criadas parcelas futuras. Itens sem categoria entram no orçamento como “A classificar”. Créditos e estornos precisam ser tratados separadamente; planilhas com esses itens são recusadas.</p></article><article class="panel"><h2>Classificação pendente (${pending.length})</h2><p class="muted">Pendências de todos os meses. Classifique os itens para atualizar os limites por categoria.</p>${pending.length ? `<div class="table-wrap"><table><thead><tr><th>Compra</th><th>Descrição / cartão</th><th>Parcela</th><th>Valor</th><th></th></tr></thead><tbody>${pending.map(e => `<tr><td>${displayDate(e.purchaseDate)}</td><td>${esc(e.description)}<br><small>${esc(e.cardName)}</small></td><td>${e.installmentNumber}/${e.installmentCount}</td><td>${money(e.amount)}</td><td><button class="secondary" data-action="classify-entry" data-id="${e.id}">Classificar</button></td></tr>`).join('')}</tbody></table></div>` : empty('Nenhuma classificação pendente', 'Os itens reconhecidos recebem categoria automaticamente.')}</article>`;
+}
+async function importDialog() {
+  if (!state.snapshot.cards.length) throw new Error('Cadastre o cartão em Cartões e faturas antes de importar.');
+  const preview = await call('previewInvoice', { month: state.month });
+  if (!preview) return;
+  modal('Conferir importação', `<p>${preview.count} compras/parcelas · ${money(preview.total)} · Vencimento ${displayDate(preview.dueDate)}.</p><p>${preview.payments} pagamento(s) da fatura ignorado(s).</p>${select('Cartão desta fatura', 'cardId', '<option value="">Selecione o cartão</option>' + options(state.snapshot.cards))}<p class="hint">Lançamentos já existentes serão ignorados. Descrições diferentes das cadastradas manualmente podem exigir conferência após a importação.</p>`, 'Importar lançamentos', async data => {
+    const result = await call('importInvoice', data);
+    state.page = 'imports'; await refresh();
+    notify(`${result.imported} importados, ${result.duplicates} duplicados ignorados, ${result.pending} pendentes de classificação.`);
+  }, form => { form.elements.cardId.required = true; });
+}
 function cardDialog(card) {
   modal(card ? 'Alterar cartão' : 'Cadastrar cartão', field('Nome do cartão', 'name', 'text', card?.name, 'required maxlength="60" placeholder="Ex.: Cartão da família"') + `<div class="form-grid">${field('Dia de fechamento', 'closingDay', 'number', card?.closingDay || 25, 'required min="1" max="31"')}${field('Dia de vencimento', 'dueDay', 'number', card?.dueDay || 5, 'required min="1" max="31"')}</div><p class="hint">Compras no dia do fechamento entram na próxima fatura. Não informe número do cartão ou código de segurança. Alterações no cadastro não mudam vencimentos de compras já lançadas.</p>`, 'Salvar cartão', async data => { await call('saveCard', { ...data, id: card?.id }); await refresh(); notify('Cartão salvo.'); });
 }
@@ -193,6 +207,8 @@ document.addEventListener('click', event => {
     else if (action === 'edit-invoice-entry') entryDialog(state.snapshot.invoices.flatMap(invoice => invoice.entries).find(e => e.id === Number(button.dataset.id)));
     else if (action === 'delete-entry') confirmDialog('Excluir lançamento?', 'Essa ação remove o lançamento do orçamento compartilhado de toda a família.', async () => { await call('deleteEntry', Number(button.dataset.id)); await refresh(); notify('Lançamento excluído.'); });
     else if (action === 'delete-series') confirmDialog('Excluir todas as parcelas?', 'Todas as parcelas desta série, inclusive parcelas já pagas, serão excluídas. As faturas e os orçamentos serão recalculados.', async () => { await call('deleteSeries', button.dataset.group); await refresh(); notify('Série de parcelas excluída.'); });
+    else if (action === 'import-itau') importDialog();
+    else if (action === 'classify-entry') entryDialog(state.snapshot.pendingClassification.find(e => e.id === Number(button.dataset.id)));
     else if (action === 'new-card') cardDialog();
     else if (action === 'edit-card') cardDialog(state.snapshot.cards.find(card => card.id === Number(button.dataset.id)));
     else if (action === 'pay-invoice') invoiceDialog(button.dataset.id);
@@ -260,6 +276,24 @@ window.smokeTest = async function () {
   await call('exportReport', { month: state.month, format: 'csv' });
   await call('exportReport', { month: state.month, format: 'pdf' });
   await call('backup', { month: state.month });
+  document.querySelector('[data-page="imports"]').click();
+  document.querySelector('[data-action="import-itau"]').click();
+  await waitFor(() => !!document.querySelector('dialog'), 'Prévia da importação falhou');
+  let importForm = document.querySelector('dialog form');
+  importForm.elements.cardId.value = String(state.snapshot.cards[0].id); importForm.requestSubmit();
+  await waitFor(() => !document.querySelector('dialog'), 'Importação pela tela falhou');
+  if (state.snapshot.pendingClassification.length !== 1) throw new Error('Pendência da importação não apareceu');
+  document.querySelector('[data-action="classify-entry"]').click();
+  const classifyForm = document.querySelector('dialog form');
+  classifyForm.elements.categoryId.value = String(state.snapshot.categories.find(c => c.name === 'Lazer').id); classifyForm.requestSubmit();
+  await waitFor(() => !document.querySelector('dialog'), 'Classificação pela tela falhou');
+  if (state.snapshot.pendingClassification.length) throw new Error('Item classificado continuou pendente');
+  document.querySelector('[data-action="import-itau"]').click();
+  await waitFor(() => !!document.querySelector('dialog'), 'Segunda prévia falhou');
+  importForm = document.querySelector('dialog form'); importForm.elements.cardId.value = String(state.snapshot.cards[0].id); importForm.requestSubmit();
+  await waitFor(() => !document.querySelector('dialog'), 'Reimportação pela tela falhou');
+  if (state.snapshot.budgetEntries.filter(e => e.description === 'Loja fictícia').length !== 1) throw new Error('Reimportação duplicou a compra');
+  document.querySelector('[data-page="dashboard"]').click();
   if (!document.querySelector('.history-chart')) throw new Error('Dashboard não renderizou');
 };
 window.upgradeSmokeTest = async function () {

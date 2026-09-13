@@ -4,6 +4,8 @@ Controle financeiro familiar offline para Windows 10 e 11 de 64 bits, com SQLite
 
 ## Instalar ou atualizar
 
+A versão 0.3.0 adiciona importação de faturas Itaú em Excel e classificação pendente. O instalador gerado fica em `release/Saldo-Familiar-0.3.0-Windows-x64.exe`. Consulte [as instruções de importação](docs/importacao-itau.md).
+
 Baixe `Saldo-Familiar-0.2.0-Windows-x64.exe` na [página da versão](https://github.com/RaphaelBarros24/pessoal/releases/tag/v0.2.0). Não exige Node.js, Python ou servidor externo.
 
 Para atualizar, feche o aplicativo e execute o instalador na mesma conta do Windows. Não é necessário desinstalar. A identificação e o caminho do banco permanecem iguais. Antes da migração aditiva, o aplicativo cria uma cópia integral em `backups/antes-atualizacao-v1-*.sqlite`. Usuários, senhas, lançamentos, pagamentos, notas, categorias e limites são preservados. Backups 0.1.0 continuam aceitos.
@@ -16,6 +18,7 @@ Na primeira instalação, crie um usuário e guarde o código de recuperação e
 - Receitas, despesas, edição, exclusão, categorias, vencimento, pagamento e observações.
 - Parcelas automáticas e meios de pagamento com acumulados mensais.
 - Cartões com fechamento/vencimento, faturas e registro de pagamento.
+- Importação de Excel (.xlsx) de fatura Itaú, prevenção de duplicados e tela de classificação pendente.
 - Dashboard, histórico de seis meses, filtros, limites e sugestões por regras locais.
 - Relatórios CSV/PDF, backup manual, restauração validada e backup diário atualizado a cada alteração, com retenção de 30 cópias diárias.
 

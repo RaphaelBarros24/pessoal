@@ -10,3 +10,5 @@ coverage/
 .env.*
 !.env.example
 .local-data/
+fatura*.xlsx
+fatura*.xls

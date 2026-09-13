@@ -34,6 +34,20 @@ Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consult
 
 ## Estado da última sessão
 
+### Sessão 2026-09-13 — versão 0.3.0
+
+- Implementada importação local de fatura Itaú Excel (.xlsx), com seleção do cartão, prévia de quantidade/total/vencimento e lançamentos individuais por linha. Pagamentos e subtotais ignorados; não são geradas parcelas futuras. Créditos/estornos são recusados com aviso sem importar parcialmente.
+- Duplicados identificados por hash dos campos da origem e ocorrência; lançamentos manuais comparados por cartão, data, descrição normalizada, valor, parcela e mês da fatura. Descrições/valores alterados e exportações parciais de compras indistinguíveis exigem conferência. Consultar `docs/importacao-itau.md`.
+- Classificação automática por histórico sem conflito e regras conservadoras. Tela Importar fatura lista pendências de todos os meses, já incluídas no orçamento como A classificar. Classificação salva serve de histórico para novas importações.
+- Schema 3 adiciona chave de importação e estado de classificação, com cópia integral obrigatória antes da migração v1/v2. IDs, usuários, senhas, cartões, parcelas, valores, pagamentos e limites preservados. Backup/restauração preservam deduplicação e pendências.
+- Onze testes automatizados passaram. Teste das telas passou no runtime de desenvolvimento e no próprio binário 0.3.0 empacotado, incluindo seleção Excel, importação, classificação e reimportação. Sintaxe JavaScript, diff e conteúdo do pacote revisados. npm install/audit: zero vulnerabilidades após override UUID 11.1.1 para ExcelJS 4.4.0.
+- Planilha pessoal fornecida conferida em banco isolado temporário: 54 compras/parcelas, um pagamento ignorado, total conferido e segunda importação sem duplicados. Banco temporário removido; banco pessoal e instalação existente não alterados. Faturas pessoais ignoradas pelo Git; dados cadastrais da planilha não copiados para os lançamentos.
+- Instalador `release/Saldo-Familiar-0.3.0-Windows-x64.exe` gerado; SHA-256 `9d4ffbdef27bbc8fd498d4c91c36b2c7d8e46d31d654bc85793fd21e83c8474e`, registrado em `release/SHA256SUMS-0.3.0.txt`. Nenhuma release 0.3.0 ou submissão à Store publicada nesta sessão.
+- Pendências: instalação por cima da versão atual e teste em Windows 10. Microsoft Store permanece dependente do cadastro/identificadores oficiais do titular; EXE 0.3.0 continua sem assinatura comercial ou da loja. Recorrências e importação genérica de extratos continuam fora do escopo.
+- Encerramento: revisão concluída; destino autorizado do código é `origin/master` em `RaphaelBarros24/pessoal`. Instalador fica local na pasta release, fora do Git.
+
+### Histórico anterior
+
 - Atualização 0.2.0: parcelas automáticas pelo valor total, meios de pagamento e acumulados, cartões com fechamento/vencimento e faturas por cartão e mês.
 - Compras no dia do fechamento entram no próximo ciclo. Parcelas do cartão consomem orçamento desde o mês da compra; faturas são pagamentos sem duplicação. Demais lançamentos continuam por vencimento.
 - Edição/exclusão individual de parcelas, exclusão da série, detalhamento e pagamento/reabertura de fatura. Configurações de cartão alteradas afetam novas compras.

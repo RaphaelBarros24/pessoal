@@ -1,6 +1,6 @@
 {
   "name": "saldo-familiar",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Controle de despesas pessoais e orçamento familiar offline",
   "author": "Raphael Barros",
@@ -21,7 +21,8 @@
       "desktop/**",
       "ui/**",
       "package.json",
-      "node_modules/sql.js/**"
+      "node_modules/sql.js/**",
+      "node_modules/exceljs/**"
     ],
     "win": {
       "target": "nsis",
@@ -38,7 +39,13 @@
     }
   },
   "dependencies": {
+    "exceljs": "^4.4.0",
     "sql.js": "^1.14.2"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   },
   "devDependencies": {
     "electron": "^44.3.0",

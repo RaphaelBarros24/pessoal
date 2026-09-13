@@ -1,3 +1,15 @@
+# Saldo Familiar 0.3.0
+
+- Importação local de fatura Itaú Excel (.xlsx), com seleção de cartão e conferência do total e vencimento.
+- Lançamentos individuais por linha, sem gerar parcelas futuras ou contar pagamentos como despesas.
+- Prevenção de duplicados em reimportações e comparação com compras cadastradas manualmente.
+- Classificação por histórico e regras conservadoras; tela de pendências de todos os meses.
+- Pendências incluídas no orçamento como “A classificar”.
+- Migração aditiva para schema 3, com cópia integral anterior e preservação de dados.
+- Onze testes automatizados passaram, além do fluxo de importação/classificação nas telas com dados fictícios.
+
+Instruções e limitações: [Importação Itaú](importacao-itau.md). Feche o aplicativo e execute `Saldo-Familiar-0.3.0-Windows-x64.exe` na mesma conta do Windows para atualizar. O binário empacotado 0.3.0 passou no teste completo das telas com banco fictício nesta máquina. A instalação por cima da versão existente e a validação em Windows 10 permanecem pendentes; o EXE não possui assinatura comercial ou da Microsoft Store.
+
 # Saldo Familiar 0.2.0
 
 Atualização do aplicativo familiar offline para Windows 10 e 11 de 64 bits.

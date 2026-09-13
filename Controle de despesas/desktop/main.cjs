@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const { openStore } = require('./store.cjs');
 const { reportHtml, reportCsv } = require('./reports.cjs');
+const { readItau } = require('./itau.cjs');
 
 app.setName('Saldo Familiar');
 const smoke = process.argv.includes('--smoke-test');
@@ -17,6 +18,7 @@ let window, store, lastFrame;
 const home = pathToFileURL(path.join(__dirname, '../ui/index.html')).href;
 const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveCard', 'payInvoice']);
 let failures = 0, blockedUntil = 0;
+let invoicePreview = null;
 
 async function exportReport(input) {
   const snapshot = store.snapshot(input.month);
@@ -48,9 +50,16 @@ if (ownsLock) app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
   store = await openStore(path.join(app.getPath('userData'), 'family.sqlite'));
   if (smoke) {
+    const workbook = new (require('exceljs').Workbook)();
+    const sheet = workbook.addWorksheet('Fatura fictícia');
+    sheet.addRow([null, 'Cartão', null, null, null, null, 'Valor (parcial)', null, 'Vencimento']);
+    sheet.addRow([null, 'Cartão teste', null, null, null, null, 25, null, new Date('2026-10-09T00:00:00Z')]);
+    sheet.addRow([null, 'Data', 'Lançamento', 'Parcelamento', 'Valor']);
+    sheet.addRow([null, new Date('2026-09-10T00:00:00Z'), 'Loja fictícia', null, 25]);
+    await workbook.xlsx.writeFile(path.join(testRoot, 'fatura-teste.xlsx'));
     dialog.showSaveDialog = async (_parent, options) => ({ canceled: false, filePath: path.join(testRoot, path.basename(options.defaultPath)) });
     dialog.showMessageBox = async () => ({ response: 1 });
-    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [path.join(testRoot, `Saldo-Familiar-backup-${new Date().toISOString().slice(0, 10)}.sqlite`)] });
+    dialog.showOpenDialog = async (_parent, options) => ({ canceled: false, filePaths: [path.join(testRoot, options.filters[0].extensions[0] === 'xlsx' ? 'fatura-teste.xlsx' : `Saldo-Familiar-backup-${new Date().toISOString().slice(0, 10)}.sqlite`)] });
   }
   ipcMain.handle('family-operation', async (event, operation, input) => {
     try {
@@ -63,6 +72,19 @@ if (ownsLock) app.whenReady().then(async () => {
       }
       let value;
       if (allowed.has(operation)) value = store[operation](input);
+      else if (operation === 'previewInvoice') {
+        store.snapshot(input.month);
+        invoicePreview = null;
+        const result = await dialog.showOpenDialog(window, { properties: ['openFile'], filters: [{ name: 'Fatura Itaú Excel', extensions: ['xlsx'] }] });
+        if (result.canceled) return { ok: true, value: null };
+        invoicePreview = await readItau(result.filePaths[0]);
+        value = { dueDate: invoicePreview.dueDate, count: invoicePreview.entries.length, total: invoicePreview.entries.reduce((sum, e) => sum + e.amount, 0), payments: invoicePreview.payments };
+      }
+      else if (operation === 'importInvoice') {
+        if (!invoicePreview) throw new Error('Selecione a planilha novamente.');
+        value = store.importInvoice({ cardId: input.cardId, invoice: invoicePreview });
+        invoicePreview = null;
+      }
       else if (operation === 'exportReport') value = await exportReport(input);
       else if (operation === 'backup') {
         store.snapshot(input.month);
@@ -86,6 +108,9 @@ if (ownsLock) app.whenReady().then(async () => {
       const image = lastFrame || await window.webContents.capturePage();
       fs.writeFileSync(path.join(testRoot, 'dashboard.png'), image.toPNG());
       if (!upgradeTest) {
+        await window.webContents.executeJavaScript('document.querySelector(\'[data-page="imports"]\').click()');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        fs.writeFileSync(path.join(testRoot, 'imports.png'), lastFrame.toPNG());
         await window.webContents.executeJavaScript('document.querySelector(\'[data-page="cards"]\').click()');
         await new Promise(resolve => setTimeout(resolve, 300));
         fs.writeFileSync(path.join(testRoot, 'cards.png'), lastFrame.toPNG());

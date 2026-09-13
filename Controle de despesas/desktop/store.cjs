@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const initSqlJs = require('sql.js');
+const { normalize } = require('./itau.cjs');
 
 function text(value, label, max = 120) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(`${label} inválido.`);
@@ -50,17 +51,22 @@ function invoiceDate(purchase, card) {
 function schemaVersion(database) { return database.exec('PRAGMA user_version')[0].values[0][0]; }
 function validateSchema(database) {
   const version = schemaVersion(database);
-  if (![1, 2].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
+  if (![1, 2, 3].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
   for (const query of ['SELECT id,name,username,salt,hash,recovery_salt,recovery_hash FROM users', 'SELECT id,name,type FROM categories', 'SELECT id,type,description,amount,due_date,paid_date,category_id,user_id,notes FROM entries', 'SELECT month,category_id,amount FROM budgets']) database.exec(query);
-  if (version === 2) {
+  if (version >= 2) {
     database.exec('SELECT payment_method,installment_group,installment_number,installment_count,budget_month,purchase_date,card_id FROM entries');
     database.exec('SELECT id,name,closing_day,due_day,closing_inclusive FROM cards');
   }
+  if (version === 3) database.exec('SELECT import_key,classification_pending FROM entries');
   if (database.exec('PRAGMA integrity_check')[0]?.values[0][0] !== 'ok' || database.exec('PRAGMA foreign_key_check').length) throw new Error('Banco inválido. O arquivo original foi preservado.');
 }
 function migrate(database) {
   validateSchema(database);
-  if (schemaVersion(database) === 2) return;
+  if (schemaVersion(database) === 3) return;
+  if (schemaVersion(database) === 2) {
+    database.run(`BEGIN; ALTER TABLE entries ADD COLUMN import_key TEXT; ALTER TABLE entries ADD COLUMN classification_pending INTEGER NOT NULL DEFAULT 0; CREATE UNIQUE INDEX entries_import_key ON entries(import_key); PRAGMA user_version=3; COMMIT;`);
+    return;
+  }
   database.run('BEGIN');
   try {
     database.run(`CREATE TABLE cards(id INTEGER PRIMARY KEY,name TEXT NOT NULL UNIQUE,closing_day INTEGER NOT NULL CHECK(closing_day BETWEEN 1 AND 31),due_day INTEGER NOT NULL CHECK(due_day BETWEEN 1 AND 31),closing_inclusive INTEGER NOT NULL DEFAULT 0);
@@ -74,6 +80,7 @@ function migrate(database) {
       PRAGMA user_version=2;`);
     database.run('COMMIT');
   } catch (error) { database.run('ROLLBACK'); throw error; }
+  migrate(database);
 }
 
 async function openStore(filename) {
@@ -84,9 +91,9 @@ async function openStore(filename) {
   try {
     if (existed) {
       validateSchema(db);
-      if (schemaVersion(db) === 1) {
+      if (schemaVersion(db) < 3) {
         const backups = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backups, { recursive: true });
-        fs.copyFileSync(filename, path.join(backups, `antes-atualizacao-v1-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`));
+        fs.copyFileSync(filename, path.join(backups, `antes-atualizacao-v${schemaVersion(db)}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`));
       }
     } else db.run(`
     CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT NOT NULL, username TEXT NOT NULL UNIQUE, salt TEXT NOT NULL, hash TEXT NOT NULL, recovery_salt TEXT NOT NULL, recovery_hash TEXT NOT NULL);
@@ -129,7 +136,7 @@ async function openStore(filename) {
   }
   function auth() { if (!user) throw new Error('Faça login para continuar.'); return user; }
   function publicUser(row) { return { id: row.id, name: row.name, username: row.username }; }
-  const entrySelect = `SELECT e.id,e.type,e.description,e.amount,e.due_date AS dueDate,e.paid_date AS paidDate,e.category_id AS categoryId,e.notes,e.payment_method AS paymentMethod,e.installment_group AS installmentGroup,e.installment_number AS installmentNumber,e.installment_count AS installmentCount,COALESCE(e.budget_month,substr(e.due_date,1,7)) AS budgetMonth,e.purchase_date AS purchaseDate,e.card_id AS cardId,c.name AS category,u.name AS author,card.name AS cardName FROM entries e JOIN categories c ON c.id=e.category_id JOIN users u ON u.id=e.user_id LEFT JOIN cards card ON card.id=e.card_id`;
+  const entrySelect = `SELECT e.id,e.type,e.description,e.amount,e.due_date AS dueDate,e.paid_date AS paidDate,e.category_id AS categoryId,e.notes,e.classification_pending AS classificationPending,e.payment_method AS paymentMethod,e.installment_group AS installmentGroup,e.installment_number AS installmentNumber,e.installment_count AS installmentCount,COALESCE(e.budget_month,substr(e.due_date,1,7)) AS budgetMonth,e.purchase_date AS purchaseDate,e.card_id AS cardId,c.name AS category,u.name AS author,card.name AS cardName FROM entries e JOIN categories c ON c.id=e.category_id JOIN users u ON u.id=e.user_id LEFT JOIN cards card ON card.id=e.card_id`;
   function invoicesFor(selectedMonth) {
     const items = rows(`${entrySelect} WHERE e.payment_method='credit_card' AND substr(e.due_date,1,7)=? ORDER BY e.due_date,e.id`, [selectedMonth]);
     const invoices = [];
@@ -184,12 +191,54 @@ async function openStore(filename) {
       db.run('UPDATE users SET salt=?,hash=?,recovery_salt=?,recovery_hash=? WHERE id=?', [salt, digest(password, salt), recoverySalt, digest(recoveryCode, recoverySalt), row.id]);
       persist(); user = null; return { recoveryCode };
     },
+    importInvoice(input) {
+      auth();
+      const cardId = id(input.cardId), dueDate = date(input.invoice.dueDate);
+      if (!rows('SELECT id FROM cards WHERE id=?', [cardId]).length) throw new Error('Cartão não encontrado.');
+      const items = input.invoice.entries;
+      if (!Array.isArray(items) || !items.length || items.length > 5000) throw new Error('Fatura inválida.');
+      const categories = rows("SELECT * FROM categories WHERE type='expense'");
+      const existing = rows("SELECT * FROM entries WHERE payment_method='credit_card' AND card_id=?", [cardId]);
+      const classified = rows("SELECT description,category_id FROM entries WHERE type='expense' AND classification_pending=0 AND category_id NOT IN (SELECT id FROM categories WHERE name='A classificar')");
+      const occurrences = new Map(), consumed = new Set();
+      return atomic(() => {
+        let imported = 0, duplicates = 0, pending = 0;
+        for (const item of items) {
+          const description = text(item.description, 'Descrição'), purchase = date(item.purchaseDate);
+          const amount = item.amount, number = item.installmentNumber, count = item.installmentCount;
+          if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isInteger(number) || !Number.isInteger(count) || number < 1 || number > count || count > 120) throw new Error('Valor ou parcela inválida.');
+          const base = JSON.stringify([cardId, purchase, normalize(description), amount, number, count, item.sourceCard]);
+          const occurrence = (occurrences.get(base) || 0) + 1; occurrences.set(base, occurrence);
+          const key = crypto.createHash('sha256').update(`${base}:${occurrence}`).digest('hex');
+          if (rows('SELECT id FROM entries WHERE import_key=?', [key]).length) { duplicates++; continue; }
+          const match = existing.find(e => !consumed.has(e.id) && !e.import_key && e.purchase_date === purchase && normalize(e.description) === normalize(description) && e.amount === amount && e.installment_number === number && e.installment_count === count && e.due_date.slice(0, 7) === dueDate.slice(0, 7));
+          if (match) { consumed.add(match.id); db.run('UPDATE entries SET import_key=? WHERE id=?', [key, match.id]); duplicates++; continue; }
+          const history = [...new Set(classified.filter(e => normalize(e.description) === normalize(description)).map(e => e.category_id))];
+          let categoryId = history.length === 1 ? history[0] : null;
+          if (!categoryId && !history.length) {
+            const rules = [['Alimentação', /\b(supermercado|mercado|padaria|restaurante|ifood)\b/], ['Transporte', /\b(uber|99app|posto|combustivel|estacionamento)\b/], ['Saúde', /\b(farmacia|drogaria|drogasil|droga raia)\b/]];
+            const rule = rules.find(([, pattern]) => pattern.test(normalize(description)));
+            categoryId = rule ? categories.find(c => normalize(c.name) === normalize(rule[0]))?.id : null;
+          }
+          if (!categoryId) {
+            db.run("INSERT OR IGNORE INTO categories(name,type) VALUES('A classificar','expense')");
+            categoryId = rows("SELECT id FROM categories WHERE name='A classificar' AND type='expense'")[0].id;
+            pending++;
+          }
+          const budgetMonth = plusMonths(purchase, number - 1).slice(0, 7);
+          db.run(`INSERT INTO entries(type,description,amount,due_date,category_id,notes,user_id,payment_method,installment_number,installment_count,budget_month,purchase_date,card_id,import_key,classification_pending) VALUES('expense',?,?,?,?,'Importado da fatura Itaú',?,'credit_card',?,?,?,?,?,?,?)`, [description, amount, dueDate, categoryId, user.id, number, count, budgetMonth, purchase, cardId, key, categoryId === rows("SELECT id FROM categories WHERE name='A classificar' AND type='expense'")[0]?.id ? 1 : 0]);
+          imported++;
+        }
+        return { imported, duplicates, pending };
+      });
+    },
     saveEntry(input) {
       auth();
       const type = input.type;
       if (!['expense', 'income'].includes(type)) throw new Error('Tipo inválido.');
       const categoryId = id(input.categoryId);
       if (!rows('SELECT id FROM categories WHERE id=? AND type=?', [categoryId, type]).length) throw new Error('Categoria incompatível com o tipo de lançamento.');
+      if (rows("SELECT id FROM categories WHERE id=? AND name='A classificar'", [categoryId]).length) throw new Error('Escolha uma categoria para concluir a classificação.');
       const description = text(input.description, 'Descrição');
       const amount = money(input.amount), dueDate = date(input.dueDate);
       const paidDate = input.paidDate ? date(input.paidDate) : null;
@@ -209,7 +258,7 @@ async function openStore(filename) {
           budgetMonth = month(input.budgetMonth ?? existing.budget_month ?? purchaseDate.slice(0, 7));
           if (existing.payment_method !== 'credit_card') editedDue = invoiceDate(purchaseDate, card);
         }
-        return atomic(() => { db.run('UPDATE entries SET type=?,description=?,amount=?,due_date=?,paid_date=?,category_id=?,notes=?,payment_method=?,card_id=?,budget_month=?,purchase_date=? WHERE id=?', [type, description, amount, editedDue, paidDate, categoryId, notes, method, cardId, budgetMonth, purchaseDate, entryId]); return entryId; });
+        return atomic(() => { db.run('UPDATE entries SET type=?,description=?,amount=?,due_date=?,paid_date=?,category_id=?,notes=?,payment_method=?,card_id=?,budget_month=?,purchase_date=?,classification_pending=0 WHERE id=?', [type, description, amount, editedDue, paidDate, categoryId, notes, method, cardId, budgetMonth, purchaseDate, entryId]); return entryId; });
       }
       const method = input.paymentMethod ?? 'unspecified';
       if (!Object.hasOwn(paymentLabels, method)) throw new Error('Forma de pagamento inválida.');
@@ -312,7 +361,7 @@ async function openStore(filename) {
       const nextDate = new Date(`${selectedMonth}-01T12:00:00Z`); nextDate.setUTCMonth(nextDate.getUTCMonth() + 1);
       const nextMonth = nextDate.toISOString().slice(0, 7), nextInvoices = invoicesFor(nextMonth);
       const normalExpenses = budgetEntries.filter(e => e.type === 'expense' && e.paymentMethod !== 'credit_card');
-      return { user, categories, entries, budgetEntries, invoices, nextInvoices, cards: rows('SELECT id,name,closing_day AS closingDay,due_day AS dueDay FROM cards ORDER BY name'), paymentTotals, backupWarning, totals: { income, expense, balance: income - expense, pending: normalExpenses.filter(e => !e.paidDate).reduce((sum, e) => sum + e.amount, 0) + invoices.reduce((sum, invoice) => sum + invoice.outstanding, 0), cardDue: invoices.reduce((sum, invoice) => sum + invoice.amount, 0), nextCardDue: nextInvoices.reduce((sum, invoice) => sum + invoice.amount, 0), payable: normalExpenses.reduce((sum, e) => sum + e.amount, 0) + invoices.reduce((sum, invoice) => sum + invoice.amount, 0) }, budgets, history, suggestions, users: rows('SELECT id,name,username FROM users ORDER BY name') };
+      return { pendingClassification: rows(`${entrySelect} WHERE e.classification_pending=1 ORDER BY e.due_date,e.id`), user, categories, entries, budgetEntries, invoices, nextInvoices, cards: rows('SELECT id,name,closing_day AS closingDay,due_day AS dueDay FROM cards ORDER BY name'), paymentTotals, backupWarning, totals: { income, expense, balance: income - expense, pending: normalExpenses.filter(e => !e.paidDate).reduce((sum, e) => sum + e.amount, 0) + invoices.reduce((sum, invoice) => sum + invoice.outstanding, 0), cardDue: invoices.reduce((sum, invoice) => sum + invoice.amount, 0), nextCardDue: nextInvoices.reduce((sum, invoice) => sum + invoice.amount, 0), payable: normalExpenses.reduce((sum, e) => sum + e.amount, 0) + invoices.reduce((sum, invoice) => sum + invoice.amount, 0) }, budgets, history, suggestions, users: rows('SELECT id,name,username FROM users ORDER BY name') };
     },
     close() { db.close(); }
   };

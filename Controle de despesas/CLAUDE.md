@@ -32,7 +32,18 @@ Use os cinco rótulos padrão de triagem. Antes de classificar tarefas, leia `do
 
 Layout single-context: `CONTEXT.md` e `docs/adr/` na raiz deste projeto. Consulte `docs/agents/domain.md`.
 
+Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, leia `docs/PROJECT_CONTEXT.md` para o estado consolidado do projeto.
+
 ## Estado da última sessão
+
+### Sessão 2026-09-14 — revisão e contexto do projeto
+
+- Revisada a implementação 0.3.0 já versionada em `bc51e1c`: arquitetura Electron/IPC/SQLite, autenticação, persistência, migrações, orçamento, parcelas, cartões, importação Itaú, relatórios e backups. Não havia alterações de código pendentes neste projeto.
+- Criado `docs/PROJECT_CONTEXT.md` com arquitetura, funcionalidades concluídas/pendentes, limitações, decisões técnicas, verificações e próximos passos. AGENTS.md e CLAUDE.md mantidos idênticos e com referência ao contexto consolidado.
+- Onze testes passaram com `npm.cmd test`; sintaxe dos arquivos JavaScript de desktop/ui/tests aprovada por `node --check`. Diff revisado e verificação de whitespace realizada. Testes das telas, instalação e empacotamento não repetidos nesta sessão documental; banco pessoal não alterado.
+- Nenhum novo bug funcional reproduzido. Registradas limitações da deduplicação e do layout Itaú, ausência de criptografia/assinatura e inconsistências antigas do README/requisitos sobre o estado 0.3.0.
+- Pendências e próximos passos: validar atualização por instalação e Windows 10; alinhar README/requisitos; publicação 0.3.0 e Store continuam pendentes. Store depende do cadastro/identificadores do titular e testes MSIX. Recorrências, extratos genéricos, comprovantes e sincronização permanecem fora do escopo atual.
+- Encerramento preparado para commit e envio a `origin/master`, somente com os três documentos deste projeto. Arquivos não rastreados de projetos vizinhos foram excluídos do escopo; nenhum dado pessoal ou instalador incluído.
 
 ### Sessão 2026-09-13 — versão 0.3.0
 

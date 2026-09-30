@@ -211,7 +211,8 @@ async function openStore(filename) {
           const occurrence = (occurrences.get(base) || 0) + 1; occurrences.set(base, occurrence);
           const key = crypto.createHash('sha256').update(`${base}:${occurrence}`).digest('hex');
           if (rows('SELECT id FROM entries WHERE import_key=?', [key]).length) { duplicates++; continue; }
-          const match = existing.find(e => !consumed.has(e.id) && !e.import_key && e.purchase_date === purchase && normalize(e.description) === normalize(description) && e.amount === amount && e.installment_number === number && e.installment_count === count && e.due_date.slice(0, 7) === dueDate.slice(0, 7));
+          let match = existing.find(e => !consumed.has(e.id) && e.purchase_date === purchase && normalize(e.description) === normalize(description) && e.amount === amount && e.installment_number === number && e.installment_count === count && e.due_date.slice(0, 7) === dueDate.slice(0, 7));
+          match ??= existing.find(e => !consumed.has(e.id) && e.purchase_date === purchase && e.amount === amount && e.installment_number === number && e.installment_count === count && e.due_date.slice(0, 7) === dueDate.slice(0, 7));
           if (match) { consumed.add(match.id); db.run('UPDATE entries SET import_key=? WHERE id=?', [key, match.id]); duplicates++; continue; }
           const history = [...new Set(classified.filter(e => normalize(e.description) === normalize(description)).map(e => e.category_id))];
           let categoryId = history.length === 1 ? history[0] : null;

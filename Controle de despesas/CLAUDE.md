@@ -36,6 +36,15 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — correção da reimportação de fatura atualizada
+
+- Reproduzido o bloqueio da fatura atualizada: créditos/estornos negativos interrompiam a leitura antes da comparação, e o Itaú havia alterado descrições e o identificador mascarado entre exportações.
+- Versão 0.3.1 preparada. Compras positivas continuam sendo importadas; créditos/estornos são ignorados com quantidade e total informados. Reimportações usam correspondência secundária por cartão, mês, data, valor, parcela, total de parcelas e ocorrência quando os campos da origem mudam.
+- Lançamentos existentes são preservados sem sobrescrever descrição, categoria, notas, valor ou pagamento. Não há substituição destrutiva da fatura; compras indistinguíveis continuam limitadas pela ausência de ID estável no Excel do Itaú.
+- Testes: regressão vermelho/verde, simulação em cópia temporária do banco real, `npm.cmd test` com 12/12, `node --check`, `git diff --check` e `npm.cmd run test:ui` com `SMOKE_OK`. O banco pessoal não foi alterado durante o diagnóstico.
+- Instalador 0.3.1 gerado e conteúdo da correção conferido; SHA-256 registrado localmente. A política de Controle de Aplicativo bloqueou sua execução, portanto a instalação permanece em 0.3.0. Backup integral verificado foi criado antes da tentativa. Pendências: instalar em ambiente permitido e confirmar a reimportação real.
+- Encerramento: revisar diff, commit e push. Não incluir fatura, banco, código de recuperação ou instalador no Git.
+
 ### Sessão 2026-09-14 — revisão e contexto do projeto
 
 - Revisada a implementação 0.3.0 já versionada em `bc51e1c`: arquitetura Electron/IPC/SQLite, autenticação, persistência, migrações, orçamento, parcelas, cartões, importação Itaú, relatórios e backups. Não havia alterações de código pendentes neste projeto.

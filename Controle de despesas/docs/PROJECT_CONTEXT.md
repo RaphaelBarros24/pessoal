@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-09-14. Versão implementada: 0.3.0, commit de referência `bc51e1c`. Esta sessão revisou a implementação existente e atualizou documentação; não alterou funcionalidades ou o banco pessoal.
+Atualizado em 2026-09-30. Versão implementada: 0.3.1. A correção permite reimportar faturas atualizadas mesmo quando o Itaú altera descrições ou o identificador mascarado e deixa créditos/estornos de bloquear as compras positivas.
 
 ## Arquitetura
 
@@ -30,10 +30,10 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Dashboard mensal, histórico de seis meses, filtros, limites por categoria e sugestões por regras locais.
 - Meios de pagamento e acumulados mensais; parcelamento de valor total em até 120 parcelas, com distribuição em centavos e ajuste de dias em meses curtos.
 - Cartões com fechamento/vencimento; faturas por cartão e mês, detalhamento, pagamento/reabertura, edição de parcela e exclusão individual ou da série manual.
-- Importação local de fatura Itaú XLSX, seleção do cartão, prévia, importação por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
+- Importação local de fatura Itaú XLSX, seleção do cartão, prévia, atualização incremental por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Reexportações com descrição ou identificador mascarado alterados usam uma assinatura secundária por ocorrência; créditos/estornos são informados e ignorados sem bloquear as compras positivas. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
 - CSV/PDF, backup manual, backup diário atualizado nas alterações com retenção de 30 cópias diárias e restauração validada com cópia anterior e novo login.
 - Migrações de schema 1/2 para 3 com cópia integral anterior obrigatória; preservação dos dados existentes e recusa de bancos futuros.
-- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.3.0 gerado localmente em `release/`, fora do Git.
+- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.3.1 gerado localmente em `release/`, fora do Git; sua execução foi bloqueada pela política desta máquina.
 
 ## Decisões técnicas e regras financeiras
 
@@ -42,8 +42,8 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Compra no dia do fechamento entra no próximo ciclo. Alterar configuração do cartão afeta novas compras; vencimentos existentes são preservados.
 - Edição/exclusão individual afeta somente a parcela escolhida. Para mudar a quantidade de parcelas manuais, excluir a série e cadastrar novamente.
 - Importação cria somente a parcela presente em cada linha, sem antecipar parcelas futuras nem criar uma série vinculada. O vencimento vem da planilha; o mês de orçamento deriva da compra e do número da parcela.
-- Deduplicação usa SHA-256 de campos normalizados da origem e número da ocorrência. Correspondências manuais são vinculadas sem sobrescrever categoria, notas, valor ou pagamento. A planilha não fornece ID único de transação.
-- Pagamentos e subtotais da planilha são ignorados; pagamentos não quitam automaticamente a fatura. Créditos/estornos impedem a importação do arquivo inteiro. Limites: 10 MB e 5.000 compras no layout Itaú conferido.
+- Deduplicação usa SHA-256 de campos normalizados da origem e número da ocorrência. Quando a origem muda descrição ou cartão mascarado, a assinatura secundária usa cartão cadastrado, mês da fatura, data, valor, parcela, total de parcelas e ocorrência. Correspondências são vinculadas sem sobrescrever descrição, categoria, notas, valor ou pagamento. A planilha não fornece ID único de transação.
+- Pagamentos e subtotais da planilha são ignorados; pagamentos não quitam automaticamente a fatura. Créditos/estornos também são ignorados, com quantidade e total exibidos; precisam ser tratados separadamente. Limites: 10 MB e 5.000 compras positivas no layout Itaú conferido.
 - Classificação usa categoria única no histórico; conflito exige classificação manual. Regras locais conservadoras cobrem alimentação, transporte e saúde quando suas categorias existem.
 - Identidade do aplicativo e caminho de dados permanecem estáveis entre versões. Distribuição pela Microsoft Store foi escolhida pelo usuário, mas o pacote atual continua NSIS sem assinatura comercial ou da loja. Consultar o roteiro antes de retomar publicação.
 - O repositório Git fica na pasta superior `Pessoal`; destino autorizado é `origin/master` em `RaphaelBarros24/pessoal`. Versionar somente arquivos deste projeto; dados pessoais, dependências, instaladores e artefatos de teste ficam fora do Git.
@@ -57,18 +57,18 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 
 ## Bugs conhecidos e limitações
 
-Nenhum novo bug funcional foi reproduzido nesta revisão e os 11 testes passaram. Isso não substitui os testes de instalação e compatibilidade pendentes.
+O bug de reimportação de fatura atualizada foi reproduzido e corrigido na versão 0.3.1. Isso não substitui os testes de instalação e compatibilidade pendentes.
 
-- Limitação de deduplicação: descrição/valor alterados, outro cartão cadastrado e exportações parciais de compras indistinguíveis exigem conferência; não há identificação inequívoca sem ID de transação na origem.
-- O parser aceita o layout Itaú conferido; outros layouts e créditos/estornos não são suportados.
+- Limitação de deduplicação: valor alterado, outro cartão cadastrado e compras indistinguíveis com a mesma data, valor e parcela exigem conferência; não há identificação inequívoca sem ID de transação na origem.
+- O parser aceita o layout Itaú conferido; outros layouts não são suportados. Créditos/estornos são informados e ignorados, sem reduzir automaticamente a fatura ou o orçamento.
 - Banco e backups sem criptografia e instalador sem assinatura são limites conhecidos do produto. Houve bloqueio do binário 0.2.0 por política do Windows na sessão anterior; o binário 0.3.0 passou no teste registrado em 2026-09-13.
 - Documentação anterior parcialmente desatualizada: README ainda descreve testes/bloqueio da 0.2.0 e somente o backup de migração v1. A 0.3.0 teve teste do binário empacotado e migra também schema 2. `docs/requisitos.md` ainda não consolida a importação Itaú; seu comportamento está em `docs/importacao-itau.md`.
 
 ## Verificações e próximos passos
 
-Nesta sessão: código e documentos existentes revisados, `npm.cmd test` com 11/11 testes aprovados, sintaxe verificada por `node --check` em `desktop`, `ui` e `tests`, e diff revisado com `git diff --check`. O uso de `npm.cmd` contornou o bloqueio de `npm.ps1` pela política de scripts sem mudar a configuração do Windows. Não foram repetidos testes das telas ou gerado novo instalador para esta alteração documental.
+Nesta sessão: falha reproduzida com teste regressivo e com a fatura real somente para leitura; a importação foi simulada em cópia temporária do banco pessoal e a cópia foi removida. `npm.cmd test` aprovou 12/12 testes, `node --check` passou nos arquivos alterados, `git diff --check` passou e `npm.cmd run test:ui` retornou `SMOKE_OK`. O instalador 0.3.1 foi gerado e os arquivos da correção dentro do pacote correspondem ao código testado, mas a política de Controle de Aplicativo bloqueou sua execução; a instalação local permanece em 0.3.0. Um backup integral verificado foi criado antes da tentativa e nenhum lançamento do banco pessoal foi alterado.
 
-Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado; não são novos testes desta sessão. O checksum do instalador está em `release/SHA256SUMS-0.3.0.txt`.
+Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do novo instalador está em `release/SHA256SUMS-0.3.1.txt`.
 
 Priorizar a validação de atualização e Windows 10, depois alinhar README/requisitos ao estado 0.3.0. Retomar a Store somente com os dados oficiais do titular e o roteiro de publicação. Ao encerrar trabalhos futuros, atualizar este contexto e manter AGENTS.md/CLAUDE.md idênticos, executar verificações proporcionais e conferir commit/push sem incluir projetos vizinhos.
 

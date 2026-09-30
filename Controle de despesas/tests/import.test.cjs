@@ -77,5 +77,17 @@ test('Excel Itaú lê datas, centavos e parcelas e ignora pagamento e subtotal',
   assert.equal(invoice.entries.length, 1); assert.equal(invoice.entries[0].amount, 1234); assert.equal(invoice.entries[0].installmentNumber, 2); assert.equal(invoice.payments, 1);
   sheet.addRow([null, new Date('2026-09-10T00:00:00Z'), 'Estorno', null, -10]);
   await workbook.xlsx.writeFile(filename);
-  await assert.rejects(readItau(filename), /estorno/);
+  const updated = await readItau(filename);
+  assert.equal(updated.entries.length, 1);
+  assert.equal(updated.credits, 1);
+  assert.equal(updated.creditTotal, 1000);
+});
+
+test('fatura atualizada preserva compras existentes e inclui somente as novas', async t => {
+  const { store, cardId } = await setup(t);
+  const existing = item('Compra existente', 1000);
+  assert.deepEqual(store.importInvoice({ cardId, invoice: { dueDate: '2026-10-09', entries: [existing] } }), { imported: 1, duplicates: 0, pending: 1 });
+  const updated = { dueDate: '2026-10-09', entries: [{ ...existing, description: 'Compra existente alterada', sourceCard: '****9999' }, item('Compra nova', 2500)] };
+  assert.deepEqual(store.importInvoice({ cardId, invoice: updated }), { imported: 1, duplicates: 1, pending: 1 });
+  assert.equal(store.snapshot('2026-10').totals.cardDue, 3500);
 });

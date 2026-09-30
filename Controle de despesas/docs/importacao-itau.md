@@ -2,16 +2,16 @@
 
 1. Cadastre o cartão em **Cartões e faturas**, caso ainda não exista. Use o mesmo cadastro em todas as importações dessa fatura, inclusive cartões adicionais e virtuais que a compõem.
 2. Abra **Importar fatura** e clique em **Selecionar planilha**. Escolha o `.xlsx` exportado pelo Itaú.
-3. Confira a quantidade, o total das compras e o vencimento. Selecione o cartão correspondente e clique em **Importar lançamentos**.
+3. Confira a quantidade, o total das compras, os créditos/estornos ignorados e o vencimento. Selecione o cartão correspondente e clique em **Atualizar fatura**.
 4. Confira o resultado: importados, duplicados ignorados e pendências. Em **Classificação pendente**, clique em **Classificar**, escolha uma categoria e salve.
 
 O processamento é local. Nome do titular, agência e conta não são copiados para os lançamentos. O identificador de origem usa um hash; o número mascarado presente no arquivo ajuda a distinguir compras iguais em cartões físicos, virtuais ou adicionais.
 
 ## Duplicados
 
-Reimportações usam cartão cadastrado, data, descrição normalizada, valor em centavos, parcela, total de parcelas e cartão mascarado da origem. Ocorrências iguais dentro da mesma fatura são preservadas individualmente. A ordem das linhas não altera a comparação entre itens diferentes.
+Reimportações usam cartão cadastrado, data, descrição normalizada, valor em centavos, parcela, total de parcelas e cartão mascarado da origem. Se o Itaú alterar a descrição ou o cartão mascarado entre exportações, a comparação secundária usa cartão cadastrado, mês da fatura, data, valor, parcela, total de parcelas e ocorrência. Ocorrências iguais dentro da mesma fatura são preservadas individualmente. A ordem das linhas não altera a comparação entre itens diferentes.
 
-Lançamentos manuais são comparados pelo cartão cadastrado, data da compra, descrição normalizada, valor, parcela e mês de vencimento. Uma correspondência é vinculada à importação sem alterar valor, categoria, notas ou pagamento. Descrições diferentes, valor modificado ou compra cadastrada em outro cartão podem impedir a identificação; confira esses casos após importar. A planilha não fornece um identificador único de transação, portanto compras indistinguíveis em exportações parciais não podem ser diferenciadas com certeza.
+Lançamentos existentes são comparados primeiro por descrição normalizada e depois pela assinatura secundária. Uma correspondência é vinculada à nova origem sem alterar descrição, valor, categoria, notas ou pagamento. Valor modificado ou compra cadastrada em outro cartão podem impedir a identificação; confira esses casos após importar. A planilha não fornece um identificador único de transação, portanto compras indistinguíveis em exportações parciais não podem ser diferenciadas com certeza.
 
 ## Classificação e parcelas
 
@@ -21,7 +21,7 @@ As pendências aparecem em todos os meses e já contam nos totais como **A class
 
 Cada linha gera somente a parcela que consta na fatura, com seu valor integral em centavos. Não há geração de parcelas futuras. O vencimento vem da planilha; o mês de orçamento segue a data original da compra mais o número da parcela menos um, como nas compras parceladas cadastradas no aplicativo. Parcelas importadas são independentes e podem ser excluídas individualmente.
 
-Pagamentos efetuados são ignorados para não duplicar despesas e não marcam automaticamente a fatura como paga. Subtotais e dados cadastrais são ignorados. Créditos/estornos são recusados com aviso, sem importar o arquivo parcialmente. São aceitos arquivos de até 10 MB e até 5.000 compras no layout conferido do Itaú, com colunas Data, Lançamento, Parcelamento e Valor.
+Pagamentos efetuados são ignorados para não duplicar despesas e não marcam automaticamente a fatura como paga. Subtotais e dados cadastrais são ignorados. Créditos/estornos também são ignorados, com quantidade e total informados na prévia e no resultado; as compras positivas continuam sendo comparadas e importadas. O crédito deve ser tratado separadamente nesta versão. São aceitos arquivos de até 10 MB e até 5.000 compras no layout conferido do Itaú, com colunas Data, Lançamento, Parcelamento e Valor.
 
 ## Atualização e verificações
 

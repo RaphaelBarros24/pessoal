@@ -1,3 +1,12 @@
+# Saldo Familiar 0.3.1
+
+- Reimportação de faturas atualizadas preserva lançamentos existentes e inclui somente compras novas, mesmo quando o Itaú altera descrições ou o identificador mascarado entre exportações.
+- Créditos e estornos deixam de bloquear o arquivo inteiro: são ignorados com quantidade e total informados na prévia e no resultado.
+- O botão e as mensagens agora deixam explícito que a operação atualiza a fatura e mantém classificações, observações e pagamentos existentes.
+- Doze testes automatizados e o teste completo da interface passaram.
+
+Feche o aplicativo e execute `Saldo-Familiar-0.3.1-Windows-x64.exe` na mesma conta do Windows. O banco permanece no mesmo caminho; a atualização não exige migração de schema. Nesta máquina, a política de Controle de Aplicativo bloqueou o instalador 0.3.1 antes da execução; a versão instalada permaneceu 0.3.0 e a instalação deve ser repetida em ambiente que permita o executável, sem desativar proteções.
+
 # Saldo Familiar 0.3.0
 
 - Importação local de fatura Itaú Excel (.xlsx), com seleção de cartão e conferência do total e vencimento.

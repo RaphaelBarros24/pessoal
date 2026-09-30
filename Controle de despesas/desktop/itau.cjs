@@ -23,19 +23,20 @@ async function readItau(filename) {
     });
   }
   if (!header || !dueDate) throw new Error('Formato Itaú não reconhecido. Exporte a fatura em Excel (.xlsx).');
-  const entries = []; let payments = 0;
+  const entries = []; let payments = 0, credits = 0, creditTotal = 0;
   sheet.eachRow((row, n) => {
     if (n <= header) return;
     const v = row.values;
     if (!v[2] || typeof v[5] !== 'number') return;
     const description = String(v[3] ?? '').trim();
     if (normalize(description) === 'pagamento efetuado') { payments++; return; }
-    if (v[5] <= 0) throw new Error(`Linha ${n}: crédito/estorno não suportado nesta versão. Nenhum lançamento foi importado.`);
+    if (v[5] < 0) { credits++; creditTotal += Math.abs(Math.round(v[5] * 100)); return; }
+    if (v[5] === 0) return;
     const installment = v[4] ? String(v[4]).match(/^Parcela\s+(\d+)\s+de\s+(\d+)$/i) : null;
     if (v[4] && !installment) throw new Error(`Parcelamento não reconhecido na linha ${n}.`);
     entries.push({ description, purchaseDate: iso(v[2]), amount: Math.round(v[5] * 100), installmentNumber: installment ? Number(installment[1]) : 1, installmentCount: installment ? Number(installment[2]) : 1, sourceCard: String(v[10] ?? '') });
   });
   if (!entries.length || entries.length > 5000) throw new Error('Planilha sem compras ou com mais de 5.000 lançamentos.');
-  return { dueDate, entries, payments };
+  return { dueDate, entries, payments, credits, creditTotal };
 }
 module.exports = { readItau, normalize };

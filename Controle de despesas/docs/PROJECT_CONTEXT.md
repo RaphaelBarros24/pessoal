@@ -66,7 +66,9 @@ O bug de reimportação de fatura atualizada foi reproduzido e corrigido na vers
 
 ## Verificações e próximos passos
 
-Nesta sessão: falha reproduzida com teste regressivo e com a fatura real somente para leitura; a importação foi simulada em cópia temporária do banco pessoal e a cópia foi removida. `npm.cmd test` aprovou 12/12 testes, `node --check` passou nos arquivos alterados, `git diff --check` passou e `npm.cmd run test:ui` retornou `SMOKE_OK`. O instalador 0.3.1 foi gerado e os arquivos da correção dentro do pacote correspondem ao código testado, mas a política de Controle de Aplicativo bloqueou sua execução; a instalação local permanece em 0.3.0. Um backup integral verificado foi criado antes da tentativa e nenhum lançamento do banco pessoal foi alterado.
+Nesta sessão: falha reproduzida com teste regressivo e com a fatura real somente para leitura; a importação foi simulada em cópia temporária do banco pessoal e a cópia foi removida. `npm.cmd test` aprovou 12/12 testes, `node --check` passou nos arquivos alterados, `git diff --check` passou e `npm.cmd run test:ui` retornou `SMOKE_OK`. O instalador 0.3.1 foi gerado e os arquivos da correção dentro do pacote correspondem ao código testado. A primeira tentativa foi bloqueada pela política de Controle de Aplicativo; após liberação administrativa, a instalação local foi confirmada como 0.3.1. Um backup integral verificado foi criado antes da tentativa inicial.
+
+Após a liberação administrativa e instalação 0.3.1, uma reimportação já realizada deixou linhas excedentes no banco pessoal. O saneamento foi limitado à fatura e ao cartão afetados, com backup integral verificado. Uma auditoria comparou as chaves canônicas do Excel antes e depois: todas as compras positivas ficaram presentes uma única vez e nenhuma linha fora do arquivo permaneceu naquele escopo. Planilha, banco, valores e dados pessoais não foram versionados.
 
 Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do novo instalador está em `release/SHA256SUMS-0.3.1.txt`.
 

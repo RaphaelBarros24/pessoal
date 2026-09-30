@@ -36,6 +36,13 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — saneamento local após reimportação
+
+- Após a instalação 0.3.1, a fatura atualizada foi comparada em leitura com o banco pessoal. A auditoria reproduziu excesso composto por duplicidades e lançamentos antigos que não pertenciam ao arquivo canônico.
+- Com autorização do usuário, o aplicativo foi fechado normalmente, foi criado e verificado um backup integral e somente as linhas excedentes daquela fatura/cartão foram removidas. Outros cartões e meses permaneceram fora do escopo.
+- A mesma auditoria passou de `RED` para `GREEN`: todas as compras positivas do Excel ficaram presentes uma única vez, sem linhas extras. Créditos/estornos continuam informados e ignorados pela versão 0.3.1; nenhuma informação financeira ou planilha foi adicionada ao Git.
+- A instalação local foi confirmada como 0.3.1. Utilitários temporários de auditoria e reparo foram removidos; o arquivo pessoal de recuperação continua não rastreado e fora do commit.
+
 ### Sessão 2026-09-30 — correção da reimportação de fatura atualizada
 
 - Reproduzido o bloqueio da fatura atualizada: créditos/estornos negativos interrompiam a leitura antes da comparação, e o Itaú havia alterado descrições e o identificador mascarado entre exportações.

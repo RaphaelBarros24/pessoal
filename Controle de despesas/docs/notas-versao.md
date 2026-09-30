@@ -1,3 +1,11 @@
+# Saldo Familiar 0.3.2
+
+- O saldo previsto agora considera receitas previstas menos despesas previstas menos despesas a pagar.
+- A descrição da métrica e o relatório PDF exibem a mesma regra usada pelo backend.
+- Teste regressivo, suíte completa e teste da interface validam a nova fórmula.
+
+Feche o aplicativo e execute `Saldo-Familiar-0.3.2-Windows-x64.exe` na mesma conta do Windows. O banco permanece no mesmo caminho e não exige migração.
+
 # Saldo Familiar 0.3.1
 
 - Reimportação de faturas atualizadas preserva lançamentos existentes e inclui somente compras novas, mesmo quando o Itaú altera descrições ou o identificador mascarado entre exportações.

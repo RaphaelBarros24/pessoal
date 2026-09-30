@@ -39,7 +39,7 @@ test('familia compartilha lancamentos, usa vencimento e preserva centavos apos r
   assert.equal(store.snapshot('2026-09').totals.expense, 10010);
   assert.equal(store.snapshot('2026-10').totals.expense, 0);
   store.saveEntry({ id, type: 'expense', description: 'Mercado corrigido', amount: '120,15', dueDate: '2026-09-20', categoryId: expense.id });
-  assert.equal(store.snapshot('2026-09').totals.balance, 287985);
+  assert.equal(store.snapshot('2026-09').totals.balance, 275970);
   assert.throws(() => store.saveEntry({ type: 'expense', description: 'Inválida', amount: '-1', dueDate: '2026-09-20', categoryId: expense.id }), /valor/i);
   assert.throws(() => store.saveEntry({ type: 'expense', description: 'Inválida', amount: '10', dueDate: '2026-02-30', categoryId: expense.id }), /data/i);
   assert.throws(() => store.saveEntry({ type: 'expense', description: 'Inválida', amount: '10', dueDate: '2026-09-20', categoryId: income.id }), /categoria/i);

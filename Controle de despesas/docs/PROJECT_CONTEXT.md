@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-09-30. Versão implementada: 0.3.1. A correção permite reimportar faturas atualizadas mesmo quando o Itaú altera descrições ou o identificador mascarado e deixa créditos/estornos de bloquear as compras positivas.
+Atualizado em 2026-09-30. Versão implementada: 0.3.2. Além da reimportação incremental corrigida na 0.3.1, o saldo previsto passa a descontar as despesas a pagar.
 
 ## Arquitetura
 
@@ -38,7 +38,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 ## Decisões técnicas e regras financeiras
 
 - Valores são inteiros em centavos. Lançamentos comuns entram no orçamento pelo vencimento, independentemente da data de pagamento.
-- Parcelas de cartão consomem orçamento a partir do mês da compra. Faturas representam pagamentos pelo vencimento e não somam novamente às despesas do orçamento. Saldo previsto é receitas menos despesas cadastradas, não saldo bancário.
+- Parcelas de cartão consomem orçamento a partir do mês da compra. Faturas representam pagamentos pelo vencimento. Saldo previsto é receitas previstas menos despesas previstas do orçamento menos despesas a pagar; por decisão do usuário, uma despesa comum pendente pode participar das duas parcelas da fórmula. Não representa saldo bancário.
 - Compra no dia do fechamento entra no próximo ciclo. Alterar configuração do cartão afeta novas compras; vencimentos existentes são preservados.
 - Edição/exclusão individual afeta somente a parcela escolhida. Para mudar a quantidade de parcelas manuais, excluir a série e cadastrar novamente.
 - Importação cria somente a parcela presente em cada linha, sem antecipar parcelas futuras nem criar uma série vinculada. O vencimento vem da planilha; o mês de orçamento deriva da compra e do número da parcela.
@@ -69,6 +69,10 @@ O bug de reimportação de fatura atualizada foi reproduzido e corrigido na vers
 Nesta sessão: falha reproduzida com teste regressivo e com a fatura real somente para leitura; a importação foi simulada em cópia temporária do banco pessoal e a cópia foi removida. `npm.cmd test` aprovou 12/12 testes, `node --check` passou nos arquivos alterados, `git diff --check` passou e `npm.cmd run test:ui` retornou `SMOKE_OK`. O instalador 0.3.1 foi gerado e os arquivos da correção dentro do pacote correspondem ao código testado. A primeira tentativa foi bloqueada pela política de Controle de Aplicativo; após liberação administrativa, a instalação local foi confirmada como 0.3.1. Um backup integral verificado foi criado antes da tentativa inicial.
 
 Após a liberação administrativa e instalação 0.3.1, uma reimportação já realizada deixou linhas excedentes no banco pessoal. O saneamento foi limitado à fatura e ao cartão afetados, com backup integral verificado. Uma auditoria comparou as chaves canônicas do Excel antes e depois: todas as compras positivas ficaram presentes uma única vez e nenhuma linha fora do arquivo permaneceu naquele escopo. Planilha, banco, valores e dados pessoais não foram versionados.
+
+Na versão 0.3.2, um teste regressivo reproduziu o saldo previsto sem despesas a pagar e passou após centralizar esse total no backend. A fórmula confirmada pelo usuário é receitas previstas menos despesas previstas menos despesas a pagar; tela, PDF e contexto usam a mesma definição. A regra foi validada também em cópia temporária do banco real, removida após a conferência.
+
+O instalador 0.3.2 foi gerado, seu conteúdo comparado ao código testado e a atualização sobre a 0.3.1 foi concluída após backup integral verificado. A instalação ativa e os arquivos de cálculo foram confirmados como 0.3.2; o banco não exigiu migração.
 
 Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do novo instalador está em `release/SHA256SUMS-0.3.1.txt`.
 

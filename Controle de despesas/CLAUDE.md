@@ -36,6 +36,13 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — saldo previsto considera despesas a pagar
+
+- Regra confirmada pelo usuário: `saldo previsto = receitas previstas - despesas previstas - despesas a pagar`. Uma despesa comum pendente pode participar das duas parcelas de despesa; essa sobreposição é intencional nesta decisão.
+- Backend centraliza o total a pagar e o reutiliza no saldo, em `pending` e em `payable`. A tela e o relatório PDF explicam a mesma fórmula.
+- Teste regressivo passou de vermelho para verde; `npm.cmd test` aprovou 12/12, `node --check`, `git diff --check` e `npm.cmd run test:ui` com `SMOKE_OK`. A fórmula foi conferida em cópia temporária do banco real, removida ao final; o banco pessoal não foi alterado.
+- Instalador 0.3.2 gerado, conteúdo empacotado conferido e instalação por cima da 0.3.1 concluída com backup integral verificado. A versão instalada e os arquivos de cálculo foram confirmados como 0.3.2. Encerramento: revisar diff, commit e push; arquivos pessoais permanecem fora do Git.
+
 ### Sessão 2026-09-30 — saneamento local após reimportação
 
 - Após a instalação 0.3.1, a fatura atualizada foi comparada em leitura com o banco pessoal. A auditoria reproduziu excesso composto por duplicidades e lançamentos antigos que não pertenciam ao arquivo canônico.

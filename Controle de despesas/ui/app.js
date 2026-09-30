@@ -60,7 +60,7 @@ function render() {
 function metric(label, value, icon, tone, detail) { return `<article class="metric ${tone}"><div><span>${label}</span><span class="metric-icon">${icon}</span></div><strong>${money(value)}</strong><small>${detail}</small></article>`; }
 function metrics() {
   const t = state.snapshot.totals;
-  return `<section class="metrics">${metric('Receitas previstas', t.income, '↙', 'income', 'Receitas por vencimento')}${metric('Despesas previstas', t.expense, '↗', 'expense', 'Consumo do orçamento no mês')}${metric('Saldo previsto', t.balance, '≈', t.balance >= 0 ? 'balance' : 'expense', 'Receitas menos despesas previstas')}${metric('Despesas a pagar', t.pending, '◷', 'pending', 'Pagamentos pendentes do mês')}</section>`;
+  return `<section class="metrics">${metric('Receitas previstas', t.income, '↙', 'income', 'Receitas por vencimento')}${metric('Despesas previstas', t.expense, '↗', 'expense', 'Consumo do orçamento no mês')}${metric('Saldo previsto', t.balance, '≈', t.balance >= 0 ? 'balance' : 'expense', 'Receitas menos despesas previstas e a pagar')}${metric('Despesas a pagar', t.pending, '◷', 'pending', 'Pagamentos pendentes do mês')}</section>`;
 }
 function historyChart() {
   const h = state.snapshot.history, max = Math.max(...h.flatMap(v => [v.income, v.expense]), 1);

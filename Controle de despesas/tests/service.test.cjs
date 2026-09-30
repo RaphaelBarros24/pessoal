@@ -80,6 +80,27 @@ test('orcamento aponta excesso e backup restaura sem aceitar arquivo invalido', 
   assert.ok(store.snapshot('2026-09').categories.some(c => c.name === 'Pets'));
 });
 
+test('orcamento organiza despesas em grupos com previsoes independentes sem perder dados', async t => {
+  const { store } = await fixture(t);
+  store.register({ name: 'Ana', username: 'ana', password: 'senha-segura-123' });
+  const category = store.snapshot('2026-09').categories.find(c => c.type === 'expense');
+  const groupId = store.saveExpenseGroup({ name: 'Necessidades' });
+  store.assignCategoryGroup({ categoryId: category.id, groupId });
+  store.saveGroupBudget({ month: '2026-09', groupId, amount: '500,00' });
+  store.saveBudget({ month: '2026-09', categoryId: category.id, amount: '300,00' });
+  store.saveEntry({ type: 'expense', description: 'Compra essencial', amount: '125,00', dueDate: '2026-09-15', categoryId: category.id });
+  const group = store.snapshot('2026-09').budgetGroups.find(item => item.id === groupId);
+  assert.equal(group.limit, 50000);
+  assert.equal(group.plannedItems, 30000);
+  assert.equal(group.spent, 12500);
+  assert.equal(group.items[0].limit, 30000);
+  store.deleteExpenseGroup(groupId);
+  const snapshot = store.snapshot('2026-09');
+  assert.equal(snapshot.budgetGroups.find(item => item.name === 'Sem grupo').items[0].categoryId, category.id);
+  assert.equal(snapshot.budgets[0].limit, 30000);
+  assert.equal(snapshot.entries[0].description, 'Compra essencial');
+});
+
 test('atualizacao migra banco 0.1.0 preservando login, IDs, notas, pagamentos e orcamento', async t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'saldo-migration-'));
   const file = path.join(dir, 'family.sqlite');
@@ -168,7 +189,7 @@ test('banco de versao futura e recusado sem alterar seus bytes', async t => {
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const file = path.join(dir, 'family.sqlite'); await createLegacy(file);
   const SQL = await require('sql.js')(); const db = new SQL.Database(fs.readFileSync(file));
-  db.run('PRAGMA user_version=4'); fs.writeFileSync(file, db.export()); db.close();
+  db.run('PRAGMA user_version=5'); fs.writeFileSync(file, db.export()); db.close();
   const original = fs.readFileSync(file);
   await assert.rejects(openStore(file), /incompatível/);
   assert.deepEqual(fs.readFileSync(file), original);

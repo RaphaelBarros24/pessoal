@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — orçamento por grupos e despesas
+
+- Versão 0.4.0 implementada: grupos de despesas permanentes, previsão mensal independente no grupo e na categoria, realizado e saldo nos dois níveis, além de área “Sem grupo”.
+- Excluir um grupo preserva categorias, lançamentos e previsões das despesas; somente a previsão do grupo é removida. A migração aditiva para o schema 4 cria `expense_groups`, `group_budgets` e o vínculo opcional da categoria, com cópia integral anterior.
+- Criado `CONTEXT.md` com a linguagem do domínio. Testes: `npm.cmd test` 13/13, verificações de sintaxe e whitespace, `npm.cmd run test:ui` com `SMOKE_OK` e inspeção visual da tela de orçamento.
+- Instalador 0.4.0 gerado e instalado sobre a 0.3.2. SHA-256: `2cbbc1066731ae270e8a6d16259cb45cc49a05aed6d3bcc9aeeb061ccf8ef54b`. Backup integral prévio e backup automático da migração foram verificados; banco ativo no schema 4 com integridade e chaves estrangeiras válidas. Aplicativo instalado confirmado em execução.
+- Pendências: validar em Windows 10 e publicar/distribuir somente quando solicitado; instalador continua sem assinatura comercial ou da Microsoft Store. Não versionar banco, backups, código de recuperação, instalador nem dados pessoais.
+
 ### Sessão 2026-09-30 — saldo previsto considera despesas a pagar
 
 - Regra confirmada pelo usuário: `saldo previsto = receitas previstas - despesas previstas - despesas a pagar`. Uma despesa comum pendente pode participar das duas parcelas de despesa; essa sobreposição é intencional nesta decisão.

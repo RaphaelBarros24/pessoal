@@ -1,3 +1,13 @@
+# Saldo Familiar 0.4.0
+
+- O orçamento agora permite criar grupos de despesas, como Necessidades, Lazer e Educação.
+- Cada grupo e cada despesa podem ter previsões mensais independentes.
+- A tela compara previsão, realizado e saldo nos dois níveis e mantém categorias ainda não organizadas em “Sem grupo”.
+- Excluir um grupo preserva categorias, lançamentos e previsões das despesas; somente a previsão do grupo é removida.
+- A migração para o schema 4 cria uma cópia integral do banco antes da atualização.
+
+Feche o aplicativo e execute `Saldo-Familiar-0.4.0-Windows-x64.exe` na mesma conta do Windows. O banco existente será preservado e migrado automaticamente.
+
 # Saldo Familiar 0.3.2
 
 - O saldo previsto agora considera receitas previstas menos despesas previstas menos despesas a pagar.

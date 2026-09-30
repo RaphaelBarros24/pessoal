@@ -51,20 +51,30 @@ function invoiceDate(purchase, card) {
 function schemaVersion(database) { return database.exec('PRAGMA user_version')[0].values[0][0]; }
 function validateSchema(database) {
   const version = schemaVersion(database);
-  if (![1, 2, 3].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
+  if (![1, 2, 3, 4].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
   for (const query of ['SELECT id,name,username,salt,hash,recovery_salt,recovery_hash FROM users', 'SELECT id,name,type FROM categories', 'SELECT id,type,description,amount,due_date,paid_date,category_id,user_id,notes FROM entries', 'SELECT month,category_id,amount FROM budgets']) database.exec(query);
   if (version >= 2) {
     database.exec('SELECT payment_method,installment_group,installment_number,installment_count,budget_month,purchase_date,card_id FROM entries');
     database.exec('SELECT id,name,closing_day,due_day,closing_inclusive FROM cards');
   }
-  if (version === 3) database.exec('SELECT import_key,classification_pending FROM entries');
+  if (version >= 3) database.exec('SELECT import_key,classification_pending FROM entries');
+  if (version >= 4) {
+    database.exec('SELECT id,name FROM expense_groups');
+    database.exec('SELECT group_id FROM categories');
+    database.exec('SELECT month,group_id,amount FROM group_budgets');
+  }
   if (database.exec('PRAGMA integrity_check')[0]?.values[0][0] !== 'ok' || database.exec('PRAGMA foreign_key_check').length) throw new Error('Banco inválido. O arquivo original foi preservado.');
 }
 function migrate(database) {
   validateSchema(database);
-  if (schemaVersion(database) === 3) return;
+  if (schemaVersion(database) === 4) return;
+  if (schemaVersion(database) === 3) {
+    database.run(`BEGIN; CREATE TABLE expense_groups(id INTEGER PRIMARY KEY,name TEXT NOT NULL UNIQUE); ALTER TABLE categories ADD COLUMN group_id INTEGER REFERENCES expense_groups(id); CREATE TABLE group_budgets(month TEXT NOT NULL,group_id INTEGER NOT NULL REFERENCES expense_groups(id) ON DELETE CASCADE,amount INTEGER NOT NULL CHECK(amount>0),PRIMARY KEY(month,group_id)); PRAGMA user_version=4; COMMIT;`);
+    return;
+  }
   if (schemaVersion(database) === 2) {
     database.run(`BEGIN; ALTER TABLE entries ADD COLUMN import_key TEXT; ALTER TABLE entries ADD COLUMN classification_pending INTEGER NOT NULL DEFAULT 0; CREATE UNIQUE INDEX entries_import_key ON entries(import_key); PRAGMA user_version=3; COMMIT;`);
+    migrate(database);
     return;
   }
   database.run('BEGIN');
@@ -91,7 +101,7 @@ async function openStore(filename) {
   try {
     if (existed) {
       validateSchema(db);
-      if (schemaVersion(db) < 3) {
+      if (schemaVersion(db) < 4) {
         const backups = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backups, { recursive: true });
         fs.copyFileSync(filename, path.join(backups, `antes-atualizacao-v${schemaVersion(db)}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`));
       }
@@ -313,6 +323,36 @@ async function openStore(filename) {
       if (rows('SELECT id FROM categories WHERE name=? AND type=?', [name, input.type]).length) throw new Error('Categoria já existente.');
       db.run('INSERT INTO categories(name,type) VALUES(?,?)', [name, input.type]); persist();
     },
+    saveExpenseGroup(input) {
+      auth(); const name = text(input.name, 'Grupo de despesas', 60);
+      const groupId = input.id ? id(input.id) : null;
+      if (rows('SELECT id FROM expense_groups WHERE name=? AND id<>?', [name, groupId || 0]).length) throw new Error('Grupo de despesas já existente.');
+      return atomic(() => {
+        if (groupId) {
+          if (!rows('SELECT id FROM expense_groups WHERE id=?', [groupId]).length) throw new Error('Grupo de despesas não encontrado.');
+          db.run('UPDATE expense_groups SET name=? WHERE id=?', [name, groupId]); return groupId;
+        }
+        db.run('INSERT INTO expense_groups(name) VALUES(?)', [name]); return rows('SELECT last_insert_rowid() AS id')[0].id;
+      });
+    },
+    deleteExpenseGroup(groupId) {
+      auth(); const validId = id(groupId);
+      if (!rows('SELECT id FROM expense_groups WHERE id=?', [validId]).length) throw new Error('Grupo de despesas não encontrado.');
+      atomic(() => { db.run('UPDATE categories SET group_id=NULL WHERE group_id=?', [validId]); db.run('DELETE FROM expense_groups WHERE id=?', [validId]); });
+    },
+    assignCategoryGroup(input) {
+      auth(); const categoryId = id(input.categoryId);
+      if (!rows("SELECT id FROM categories WHERE id=? AND type='expense'", [categoryId]).length) throw new Error('Escolha uma categoria de despesa.');
+      const groupId = input.groupId ? id(input.groupId) : null;
+      if (groupId && !rows('SELECT id FROM expense_groups WHERE id=?', [groupId]).length) throw new Error('Grupo de despesas não encontrado.');
+      db.run('UPDATE categories SET group_id=? WHERE id=?', [groupId, categoryId]); persist();
+    },
+    saveGroupBudget(input) {
+      auth(); const selectedMonth = month(input.month); const groupId = id(input.groupId);
+      if (!rows('SELECT id FROM expense_groups WHERE id=?', [groupId]).length) throw new Error('Grupo de despesas não encontrado.');
+      db.run('INSERT INTO group_budgets(month,group_id,amount) VALUES(?,?,?) ON CONFLICT(month,group_id) DO UPDATE SET amount=excluded.amount', [selectedMonth, groupId, money(input.amount)]); persist();
+    },
+    deleteGroupBudget(input) { auth(); db.run('DELETE FROM group_budgets WHERE month=? AND group_id=?', [month(input.month), id(input.groupId)]); persist(); },
     saveBudget(input) {
       auth(); const selectedMonth = month(input.month); const categoryId = id(input.categoryId);
       if (!rows("SELECT id FROM categories WHERE id=? AND type='expense'", [categoryId]).length) throw new Error('Escolha uma categoria de despesa.');
@@ -336,13 +376,27 @@ async function openStore(filename) {
     },
     snapshot(selectedMonth) {
       auth(); month(selectedMonth);
-      const categories = rows('SELECT * FROM categories ORDER BY type,name');
+      const categories = rows('SELECT id,name,type,group_id AS groupId FROM categories ORDER BY type,name');
       const budgetEntries = rows(`${entrySelect} WHERE COALESCE(e.budget_month,substr(e.due_date,1,7))=? ORDER BY e.due_date DESC,e.id DESC`, [selectedMonth]).map(e => ({ ...e, kind: 'entry' }));
       const invoices = invoicesFor(selectedMonth);
       const entries = [...budgetEntries, ...invoices].sort((a, b) => b.dueDate.localeCompare(a.dueDate));
       const income = budgetEntries.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
       const expense = budgetEntries.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
       const budgets = rows('SELECT b.category_id AS categoryId,c.name AS category,b.amount AS "limit" FROM budgets b JOIN categories c ON c.id=b.category_id WHERE b.month=? ORDER BY c.name', [selectedMonth]).map(b => ({ ...b, spent: budgetEntries.filter(e => e.type === 'expense' && e.categoryId === b.categoryId).reduce((sum, e) => sum + e.amount, 0) }));
+      const expenseGroups = rows('SELECT g.id,g.name,gb.amount AS "limit" FROM expense_groups g LEFT JOIN group_budgets gb ON gb.group_id=g.id AND gb.month=? ORDER BY g.name', [selectedMonth]);
+      const groupedBudgets = expenseGroups.map(group => {
+        const items = categories.filter(category => category.type === 'expense' && category.groupId === group.id).map(category => {
+          const budget = budgets.find(item => item.categoryId === category.id);
+          const spent = budgetEntries.filter(entry => entry.type === 'expense' && entry.categoryId === category.id).reduce((sum, entry) => sum + entry.amount, 0);
+          return { categoryId: category.id, category: category.name, limit: budget?.limit || 0, spent };
+        });
+        return { ...group, plannedItems: items.reduce((sum, item) => sum + item.limit, 0), spent: items.reduce((sum, item) => sum + item.spent, 0), items };
+      });
+      const ungroupedItems = categories.filter(category => category.type === 'expense' && !category.groupId).map(category => {
+        const budget = budgets.find(item => item.categoryId === category.id);
+        return { categoryId: category.id, category: category.name, limit: budget?.limit || 0, spent: budgetEntries.filter(entry => entry.type === 'expense' && entry.categoryId === category.id).reduce((sum, entry) => sum + entry.amount, 0) };
+      });
+      const budgetGroups = [...groupedBudgets, { id: null, name: 'Sem grupo', limit: null, plannedItems: ungroupedItems.reduce((sum, item) => sum + item.limit, 0), spent: ungroupedItems.reduce((sum, item) => sum + item.spent, 0), items: ungroupedItems }].filter(group => group.id || group.items.length);
       const format = cents => (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       const suggestions = budgets.filter(b => b.spent > b.limit).map(b => `${b.category}: gastos ${format(b.spent - b.limit)} acima do limite. Revise os próximos gastos ou ajuste o orçamento.`);
       if (expense > income) suggestions.push(`Despesas superam as receitas previstas em ${format(expense - income)}. Revise gastos e receitas do mês.`);
@@ -363,7 +417,7 @@ async function openStore(filename) {
       const nextMonth = nextDate.toISOString().slice(0, 7), nextInvoices = invoicesFor(nextMonth);
       const normalExpenses = budgetEntries.filter(e => e.type === 'expense' && e.paymentMethod !== 'credit_card');
       const payable = normalExpenses.filter(e => !e.paidDate).reduce((sum, e) => sum + e.amount, 0) + invoices.reduce((sum, invoice) => sum + invoice.outstanding, 0);
-      return { pendingClassification: rows(`${entrySelect} WHERE e.classification_pending=1 ORDER BY e.due_date,e.id`), user, categories, entries, budgetEntries, invoices, nextInvoices, cards: rows('SELECT id,name,closing_day AS closingDay,due_day AS dueDay FROM cards ORDER BY name'), paymentTotals, backupWarning, totals: { income, expense, balance: income - expense - payable, pending: payable, cardDue: invoices.reduce((sum, invoice) => sum + invoice.amount, 0), nextCardDue: nextInvoices.reduce((sum, invoice) => sum + invoice.amount, 0), payable }, budgets, history, suggestions, users: rows('SELECT id,name,username FROM users ORDER BY name') };
+      return { pendingClassification: rows(`${entrySelect} WHERE e.classification_pending=1 ORDER BY e.due_date,e.id`), user, categories, entries, budgetEntries, invoices, nextInvoices, cards: rows('SELECT id,name,closing_day AS closingDay,due_day AS dueDay FROM cards ORDER BY name'), paymentTotals, backupWarning, totals: { income, expense, balance: income - expense - payable, pending: payable, cardDue: invoices.reduce((sum, invoice) => sum + invoice.amount, 0), nextCardDue: nextInvoices.reduce((sum, invoice) => sum + invoice.amount, 0), payable }, budgets, budgetGroups, history, suggestions, users: rows('SELECT id,name,username FROM users ORDER BY name') };
     },
     close() { db.close(); }
   };

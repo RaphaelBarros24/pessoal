@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-09-30. Versão implementada: 0.3.2. Além da reimportação incremental corrigida na 0.3.1, o saldo previsto passa a descontar as despesas a pagar.
+Atualizado em 2026-09-30. Versão implementada e instalada: 0.4.0. O orçamento agora organiza categorias em grupos e admite previsões mensais independentes no grupo e na despesa.
 
 ## Arquitetura
 
@@ -19,7 +19,7 @@ Aplicativo desktop offline para orçamento familiar, em português do Brasil e r
 
 O fluxo é tela → preload → IPC no processo principal → serviço de persistência → resposta para a tela. O processo principal valida a origem do IPC e controla as operações permitidas. A janela usa sandbox, isolamento de contexto e Node desativado no renderer; navegação externa, novas janelas e permissões são bloqueadas. A CSP da interface impede conexões de rede.
 
-O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas e importação usam transação e recuperação do estado anterior em caso de erro. O schema atual é 3, com tabelas `users`, `categories`, `entries`, `budgets` e `cards`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
+O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas e importação usam transação e recuperação do estado anterior em caso de erro. O schema atual é 4, com tabelas `users`, `categories`, `entries`, `budgets`, `cards`, `expense_groups` e `group_budgets`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
 
 O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpasta `backups`. Todos os logins do aplicativo compartilham o orçamento na mesma conta do Windows. Contas do Windows distintas usam bancos diferentes. Banco e backups não são criptografados; senhas e códigos de recuperação usam hashes scrypt com salt.
 
@@ -27,17 +27,18 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 
 - Cadastro e login offline, cadastro de familiares por usuário conectado e recuperação individual com código renovado após o uso.
 - Receitas/despesas com categorias, observações, vencimento, pagamento, edição e exclusão compartilhadas.
-- Dashboard mensal, histórico de seis meses, filtros, limites por categoria e sugestões por regras locais.
+- Dashboard mensal, histórico de seis meses, filtros, previsões mensais por grupo e categoria e sugestões por regras locais. Categorias sem associação permanecem em “Sem grupo”.
 - Meios de pagamento e acumulados mensais; parcelamento de valor total em até 120 parcelas, com distribuição em centavos e ajuste de dias em meses curtos.
 - Cartões com fechamento/vencimento; faturas por cartão e mês, detalhamento, pagamento/reabertura, edição de parcela e exclusão individual ou da série manual.
 - Importação local de fatura Itaú XLSX, seleção do cartão, prévia, atualização incremental por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Reexportações com descrição ou identificador mascarado alterados usam uma assinatura secundária por ocorrência; créditos/estornos são informados e ignorados sem bloquear as compras positivas. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
 - CSV/PDF, backup manual, backup diário atualizado nas alterações com retenção de 30 cópias diárias e restauração validada com cópia anterior e novo login.
-- Migrações de schema 1/2 para 3 com cópia integral anterior obrigatória; preservação dos dados existentes e recusa de bancos futuros.
-- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.3.1 gerado localmente em `release/`, fora do Git; sua execução foi bloqueada pela política desta máquina.
+- Migrações de schema 1/2/3 para 4 com cópia integral anterior obrigatória; preservação dos dados existentes e recusa de bancos futuros.
+- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.4.0 gerado e instalado localmente; artefatos em `release/` ficam fora do Git.
 
 ## Decisões técnicas e regras financeiras
 
 - Valores são inteiros em centavos. Lançamentos comuns entram no orçamento pelo vencimento, independentemente da data de pagamento.
+- A previsão do grupo é independente da soma das previsões das despesas. Excluir um grupo mantém categorias, lançamentos e previsões por categoria em “Sem grupo”; somente as previsões mensais do grupo são removidas.
 - Parcelas de cartão consomem orçamento a partir do mês da compra. Faturas representam pagamentos pelo vencimento. Saldo previsto é receitas previstas menos despesas previstas do orçamento menos despesas a pagar; por decisão do usuário, uma despesa comum pendente pode participar das duas parcelas da fórmula. Não representa saldo bancário.
 - Compra no dia do fechamento entra no próximo ciclo. Alterar configuração do cartão afeta novas compras; vencimentos existentes são preservados.
 - Edição/exclusão individual afeta somente a parcela escolhida. Para mudar a quantidade de parcelas manuais, excluir a série e cadastrar novamente.
@@ -72,9 +73,9 @@ Após a liberação administrativa e instalação 0.3.1, uma reimportação já 
 
 Na versão 0.3.2, um teste regressivo reproduziu o saldo previsto sem despesas a pagar e passou após centralizar esse total no backend. A fórmula confirmada pelo usuário é receitas previstas menos despesas previstas menos despesas a pagar; tela, PDF e contexto usam a mesma definição. A regra foi validada também em cópia temporária do banco real, removida após a conferência.
 
-O instalador 0.3.2 foi gerado, seu conteúdo comparado ao código testado e a atualização sobre a 0.3.1 foi concluída após backup integral verificado. A instalação ativa e os arquivos de cálculo foram confirmados como 0.3.2; o banco não exigiu migração.
+O instalador 0.4.0 foi gerado e instalado sobre a 0.3.2 após backup integral verificado. A migração para o schema 4 gerou também o backup automático da versão 3; integridade e chaves estrangeiras foram aprovadas. A instalação ativa foi confirmada como 0.4.0 e o aplicativo foi aberto com o banco migrado.
 
-Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do novo instalador está em `release/SHA256SUMS-0.3.1.txt`.
+Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do instalador atual está em `release/SHA256SUMS-0.4.0.txt`.
 
 Priorizar a validação de atualização e Windows 10, depois alinhar README/requisitos ao estado 0.3.0. Retomar a Store somente com os dados oficiais do titular e o roteiro de publicação. Ao encerrar trabalhos futuros, atualizar este contexto e manter AGENTS.md/CLAUDE.md idênticos, executar verificações proporcionais e conferir commit/push sem incluir projetos vizinhos.
 
@@ -84,4 +85,5 @@ Priorizar a validação de atualização e Windows 10, depois alinhar README/req
 - `docs/importacao-itau.md`: operação, deduplicação e limites da importação.
 - `docs/notas-versao.md`: histórico das versões.
 - `docs/publicacao-microsoft-store.md`: roteiro e pendências de publicação.
-- `docs/agents/`: convenções de domínio, triagem e issue tracker. `CONTEXT.md` e `docs/adr/` não existem no estado revisado; este documento consolida o contexto técnico e operacional sem criar ADRs nesta sessão.
+- `CONTEXT.md`: vocabulário canônico de grupos, despesas planejadas, previsões e realizado.
+- `docs/agents/`: convenções de domínio, triagem e issue tracker. Nenhum ADR foi necessário para esta evolução aditiva.

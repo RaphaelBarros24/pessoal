@@ -26,6 +26,20 @@ test('cadastro, login offline e recuperacao individual exigem credenciais valida
   assert.throws(() => store.recover({ username: 'ana', code: created.recoveryCode, password: 'terceira-senha' }), /inválid/);
 });
 
+test('recuperacao administrativa local exige confirmacao, cria backup e renova credenciais', async t => {
+  const { store, dir } = await fixture(t);
+  const created = store.register({ name: 'Flávio', username: 'flavio', password: 'senha-antiga-123' });
+  store.logout();
+  assert.deepEqual(store.localRecoveryUsers(), [{ id: 1, name: 'Flávio', username: 'flavio' }]);
+  assert.throws(() => store.localAdminRecover({ userId: 1, confirmation: 'outro', password: 'senha-nova-123' }), /confirmação/i);
+  const result = store.localAdminRecover({ userId: 1, confirmation: 'flavio', password: 'senha-nova-123' });
+  assert.ok(result.recoveryCode.length >= 24);
+  assert.ok(fs.readdirSync(path.join(dir, 'backups')).some(file => file.startsWith('antes-recuperacao-administrativa-')));
+  assert.throws(() => store.login({ username: 'flavio', password: 'senha-antiga-123' }), /inválid/i);
+  assert.throws(() => store.recover({ username: 'flavio', code: created.recoveryCode, password: 'outra-senha-123' }), /inválid/i);
+  assert.equal(store.login({ username: 'flavio', password: 'senha-nova-123' }).name, 'Flávio');
+});
+
 test('familia compartilha lancamentos, usa vencimento e preserva centavos apos reabrir', async t => {
   const { store, dir } = await fixture(t);
   store.register({ name: 'Ana', username: 'ana', password: 'senha-segura-123' });

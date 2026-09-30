@@ -183,6 +183,7 @@ async function openStore(filename) {
   persist();
   return {
     status() { return { hasUsers: rows('SELECT id FROM users LIMIT 1').length > 0, user, backupWarning }; },
+    localRecoveryUsers() { return rows('SELECT id,name,username FROM users ORDER BY name'); },
     register(input) {
       if (rows('SELECT id FROM users LIMIT 1').length) auth();
       const name = text(input.name, 'Nome');
@@ -218,6 +219,21 @@ async function openStore(filename) {
       const recoveryCode = crypto.randomBytes(18).toString('hex');
       db.run('UPDATE users SET salt=?,hash=?,recovery_salt=?,recovery_hash=? WHERE id=?', [salt, digest(password, salt), recoverySalt, digest(recoveryCode, recoverySalt), row.id]);
       persist(); user = null; return { recoveryCode };
+    },
+    localAdminRecover(input) {
+      const userId = id(input.userId);
+      const row = rows('SELECT * FROM users WHERE id=?', [userId])[0];
+      if (!row) throw new Error('Usuário não encontrado.');
+      if (typeof input.confirmation !== 'string' || input.confirmation.trim().toLowerCase() !== row.username) throw new Error('Confirmação inválida. Digite exatamente o nome de usuário selecionado.');
+      const password = secret(input.password);
+      const backupDirectory = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backupDirectory, { recursive: true });
+      const safety = path.join(backupDirectory, `antes-recuperacao-administrativa-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`);
+      fs.writeFileSync(safety, Buffer.from(db.export()), { mode: 0o600 });
+      const salt = crypto.randomBytes(16).toString('hex');
+      const recoverySalt = crypto.randomBytes(16).toString('hex');
+      const recoveryCode = crypto.randomBytes(18).toString('hex');
+      atomic(() => db.run('UPDATE users SET salt=?,hash=?,recovery_salt=?,recovery_hash=? WHERE id=?', [salt, digest(password, salt), recoverySalt, digest(recoveryCode, recoverySalt), userId]));
+      user = null; return { recoveryCode, username: row.username };
     },
     importInvoice(input) {
       auth();

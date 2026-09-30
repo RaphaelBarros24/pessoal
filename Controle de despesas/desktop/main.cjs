@@ -16,7 +16,7 @@ const ownsLock = app.requestSingleInstanceLock();
 if (!ownsLock) app.quit();
 let window, store, lastFrame;
 const home = pathToFileURL(path.join(__dirname, '../ui/index.html')).href;
-const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
+const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'localRecoveryUsers', 'localAdminRecover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
 let failures = 0, blockedUntil = 0;
 let invoicePreview = null;
 
@@ -65,7 +65,7 @@ if (ownsLock) app.whenReady().then(async () => {
     try {
       if (event.sender !== window?.webContents || event.senderFrame?.url !== home) throw new Error('Origem inválida.');
       if (typeof operation !== 'string') throw new Error('Operação inválida.');
-      if (['login', 'recover'].includes(operation)) {
+      if (['login', 'recover', 'localAdminRecover'].includes(operation)) {
         if (Date.now() < blockedUntil) throw new Error('Muitas tentativas. Aguarde 30 segundos.');
         try { const value = store[operation](input); failures = 0; return { ok: true, value }; }
         catch (error) { if (++failures >= 5) { blockedUntil = Date.now() + 30000; failures = 0; } throw error; }

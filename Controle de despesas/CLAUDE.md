@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — recuperação administrativa local
+
+- Versão 0.4.2 adiciona **Recuperação administrativa local** na tela de login para perda simultânea de senha e código. O fluxo lista contas do banco local, exige confirmação exata do usuário e nova senha confirmada.
+- Antes da troca, é criado `backups/antes-recuperacao-administrativa-*.sqlite`; senha e código anteriores são invalidados e um novo código é exibido uma única vez. A autorização decorre do controle da conta do Windows e do banco, que permanece local e não criptografado.
+- Teste regressivo confirmou backup, confirmação obrigatória, invalidação das credenciais antigas e login com a nova senha. `npm.cmd test` aprovou 15/15; sintaxe, whitespace e `npm.cmd run test:ui` com fluxo completo retornaram sucesso.
+- Instalador 0.4.2 gerado, instalado e aberto. SHA-256: `46883c1c4ccf0f2d6c299bd0bad3f76bee6cefa6d19c0eef4262e7d48bf1ab1a`. Backup pré-instalação verificado. O instalador deve ser executado no computador que contém o banco do Flávio.
+- Pendências: entregar/executar o instalador no computador do Flávio e guardar o novo código em local seguro; validar em Windows 10. Não versionar credenciais, banco, backups ou instaladores.
+
 ### Sessão 2026-09-30 — correção da hierarquia do orçamento
 
 - Corrigida a interpretação do requisito: grupo, despesa planejada e classificação são três conceitos distintos. Um grupo aceita várias despesas, inclusive várias com a mesma classificação, cada uma com previsão própria.

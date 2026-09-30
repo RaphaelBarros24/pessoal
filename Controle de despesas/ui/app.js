@@ -29,7 +29,7 @@ function authFields() {
 }
 function renderAuth() {
   const register = state.authMode === 'register', recover = state.authMode === 'recover';
-  root.innerHTML = `<main class="auth"><section class="auth-story"><div class="brand"><span class="brand-mark">S</span>Saldo Familiar</div><div><span class="eyebrow">MAIS CLAREZA. MAIS TRANQUILIDADE.</span><h1>Um plano para<br>o que importa.</h1><p>Organize as contas da casa, entenda seus gastos e cuide do futuro em família.</p><div class="auth-art"><div class="art-card"><span>Seu próximo passo</span><strong>Equilíbrio financeiro</strong><div class="art-bars"><i></i><i></i><i></i><i></i><i></i></div><small>Uma escolha de cada vez.</small></div><span class="art-circle">↗</span></div></div><small>Seu banco fica nesta máquina. Seu orçamento funciona offline.</small></section><section class="auth-form"><span class="pill">● Aplicativo offline</span><h2>${register ? 'Comece pela sua família' : recover ? 'Recupere seu acesso' : 'Bom ter você por aqui'}</h2><p class="muted">${register ? 'Crie o primeiro usuário. Depois, convide familiares pelo aplicativo.' : recover ? 'Use o código que você guardou ao criar sua conta.' : 'Entre para acompanhar o orçamento compartilhado.'}</p><form id="auth-form">${authFields()}<p class="hint">${register ? 'Escolha uma senha com pelo menos 10 caracteres. O código de recuperação será exibido uma única vez.' : recover ? 'Após redefinir a senha, você receberá um novo código de recuperação.' : 'O login protege o acesso pelo aplicativo; o banco e os backups não são criptografados.'}</p><button class="primary" type="submit">${register ? 'Criar meu acesso' : recover ? 'Redefinir senha' : 'Entrar no orçamento'} <span>→</span></button></form>${register ? '' : `<button class="link" data-action="auth-mode" data-mode="${recover ? 'login' : 'recover'}">${recover ? 'Voltar ao login' : 'Esqueci minha senha'}</button>`}</section></main>`;
+  root.innerHTML = `<main class="auth"><section class="auth-story"><div class="brand"><span class="brand-mark">S</span>Saldo Familiar</div><div><span class="eyebrow">MAIS CLAREZA. MAIS TRANQUILIDADE.</span><h1>Um plano para<br>o que importa.</h1><p>Organize as contas da casa, entenda seus gastos e cuide do futuro em família.</p><div class="auth-art"><div class="art-card"><span>Seu próximo passo</span><strong>Equilíbrio financeiro</strong><div class="art-bars"><i></i><i></i><i></i><i></i><i></i></div><small>Uma escolha de cada vez.</small></div><span class="art-circle">↗</span></div></div><small>Seu banco fica nesta máquina. Seu orçamento funciona offline.</small></section><section class="auth-form"><span class="pill">● Aplicativo offline</span><h2>${register ? 'Comece pela sua família' : recover ? 'Recupere seu acesso' : 'Bom ter você por aqui'}</h2><p class="muted">${register ? 'Crie o primeiro usuário. Depois, convide familiares pelo aplicativo.' : recover ? 'Use o código que você guardou ao criar sua conta.' : 'Entre para acompanhar o orçamento compartilhado.'}</p><form id="auth-form">${authFields()}<p class="hint">${register ? 'Escolha uma senha com pelo menos 10 caracteres. O código de recuperação será exibido uma única vez.' : recover ? 'Após redefinir a senha, você receberá um novo código de recuperação.' : 'O login protege o acesso pelo aplicativo; o banco e os backups não são criptografados.'}</p><button class="primary" type="submit">${register ? 'Criar meu acesso' : recover ? 'Redefinir senha' : 'Entrar no orçamento'} <span>→</span></button></form>${register ? '' : `<button class="link" data-action="auth-mode" data-mode="${recover ? 'login' : 'recover'}">${recover ? 'Voltar ao login' : 'Esqueci minha senha'}</button>${recover ? '' : '<br><button class="link danger" data-action="local-admin-recovery">Recuperação administrativa local</button>'}`}</section></main>`;
   document.querySelector('#auth-form').addEventListener('submit', event => {
     event.preventDefault(); const data = Object.fromEntries(new FormData(event.target));
     const submit = event.target.querySelector('[type="submit"]');
@@ -171,6 +171,16 @@ function importsPage() {
   const pending = state.snapshot.pendingClassification;
   return `<article class="panel"><div class="panel-heading"><div><h2>Importar fatura Itaú</h2><p>Selecione o Excel (.xlsx) exportado pelo Itaú e o cartão cadastrado correspondente.</p></div><button class="primary" data-action="import-itau">Selecionar planilha</button></div><p class="hint">Cada compra ou parcela da planilha será conferida antes de salvar. Pagamentos, créditos e estornos são informados e ignorados. Não são criadas parcelas futuras. Itens sem categoria entram no orçamento como “A classificar”.</p></article><article class="panel"><h2>Classificação pendente (${pending.length})</h2><p class="muted">Pendências de todos os meses. Classifique os itens para atualizar os limites por categoria.</p>${pending.length ? `<div class="table-wrap"><table><thead><tr><th>Compra</th><th>Descrição / cartão</th><th>Parcela</th><th>Valor</th><th></th></tr></thead><tbody>${pending.map(e => `<tr><td>${displayDate(e.purchaseDate)}</td><td>${esc(e.description)}<br><small>${esc(e.cardName)}</small></td><td>${e.installmentNumber}/${e.installmentCount}</td><td>${money(e.amount)}</td><td><button class="secondary" data-action="classify-entry" data-id="${e.id}">Classificar</button></td></tr>`).join('')}</tbody></table></div>` : empty('Nenhuma classificação pendente', 'Os itens reconhecidos recebem categoria automaticamente.')}</article>`;
 }
+async function localAdminRecoveryDialog() {
+  const users = await call('localRecoveryUsers');
+  if (!users.length) throw new Error('Nenhum usuário cadastrado neste computador.');
+  const userOptions = users.map(user => `<option value="${user.id}" data-username="${esc(user.username)}">${esc(user.name)} · @${esc(user.username)}</option>`).join('');
+  modal('Recuperação administrativa local', `${select('Acesso a redefinir', 'userId', userOptions)}${field('Confirme o nome de usuário', 'confirmation', 'text', '', 'required autocomplete="off" placeholder="Digite o usuário exibido acima"')}${field('Nova senha', 'password', 'password', '', 'required minlength="10" maxlength="256" autocomplete="new-password"')}${field('Confirme a nova senha', 'passwordConfirmation', 'password', '', 'required minlength="10" maxlength="256" autocomplete="new-password"')}<p class="hint danger">Use somente no computador autorizado. Quem controla esta conta do Windows e o banco local consegue redefinir um acesso. Um backup será criado antes da alteração, e a senha e o código de recuperação anteriores deixarão de funcionar.</p>`, 'Redefinir acesso', async data => {
+    if (data.password !== data.passwordConfirmation) throw new Error('As senhas não conferem.');
+    const result = await call('localAdminRecover', { userId: data.userId, confirmation: data.confirmation, password: data.password });
+    state.authMode = 'login'; renderAuth(); recoveryDialog(result.recoveryCode);
+  });
+}
 async function importDialog() {
   if (!state.snapshot.cards.length) throw new Error('Cadastre o cartão em Cartões e faturas antes de importar.');
   const preview = await call('previewInvoice', { month: state.month });
@@ -229,6 +239,7 @@ document.addEventListener('click', event => {
   guarded(async () => {
     if (action === 'navigate') { state.page = button.dataset.page; render(); }
     else if (action === 'auth-mode') { state.authMode = button.dataset.mode; renderAuth(); }
+    else if (action === 'local-admin-recovery') await localAdminRecoveryDialog();
     else if (action === 'logout') { await call('logout'); state.snapshot = null; state.page = 'dashboard'; await initialize(); }
     else if (action === 'new-entry') entryDialog();
     else if (action === 'edit-entry') entryDialog(state.snapshot.entries.find(e => e.id === Number(button.dataset.id)));
@@ -342,6 +353,14 @@ window.smokeTest = async function () {
   if (state.snapshot.budgetEntries.filter(e => e.description === 'Loja fictícia').length !== 1) throw new Error('Reimportação duplicou a compra');
   document.querySelector('[data-page="dashboard"]').click();
   if (!document.querySelector('.history-chart')) throw new Error('Dashboard não renderizou');
+  await call('logout'); state.snapshot = null; await initialize();
+  document.querySelector('[data-action="local-admin-recovery"]').click();
+  await waitFor(() => !!document.querySelector('dialog'), 'Recuperação administrativa não abriu');
+  const adminRecovery = document.querySelector('dialog form'); adminRecovery.elements.confirmation.value = 'demo'; adminRecovery.elements.password.value = 'nova-senha-demo-123'; adminRecovery.elements.passwordConfirmation.value = 'nova-senha-demo-123'; adminRecovery.requestSubmit();
+  await waitFor(() => !!document.querySelector('dialog .recovery-code'), 'Novo código da recuperação administrativa não apareceu');
+  const renewedRecovery = document.querySelector('dialog form'); renewedRecovery.elements.saved.checked = true; renewedRecovery.requestSubmit();
+  const loginAfterRecovery = document.querySelector('#auth-form'); loginAfterRecovery.elements.username.value = 'demo'; loginAfterRecovery.elements.password.value = 'nova-senha-demo-123'; loginAfterRecovery.requestSubmit();
+  await waitFor(() => !!document.querySelector('#month'), 'Login com a senha administrativa nova falhou');
 };
 window.upgradeSmokeTest = async function () {
   await initialize();

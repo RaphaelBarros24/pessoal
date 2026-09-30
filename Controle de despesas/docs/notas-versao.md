@@ -1,3 +1,12 @@
+# Saldo Familiar 0.4.2
+
+- Adicionada recuperação administrativa local para usuários sem senha e sem código de recuperação.
+- O administrador seleciona o acesso, confirma exatamente o nome de usuário e define uma nova senha.
+- Antes da redefinição, o aplicativo cria um backup integral; senha e código anteriores são invalidados e um novo código é emitido.
+- A recuperação depende do controle da conta do Windows e do banco local, que continua sem criptografia.
+
+Instale `Saldo-Familiar-0.4.2-Windows-x64.exe` no computador que contém o banco a recuperar. Na tela de login, escolha **Recuperação administrativa local**.
+
 # Saldo Familiar 0.4.1
 
 - Corrigido o modelo do orçamento para três níveis: grupo, despesa planejada e classificação.

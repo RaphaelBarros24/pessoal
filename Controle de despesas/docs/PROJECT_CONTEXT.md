@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-09-30. Versão implementada e instalada: 0.4.1. O orçamento usa três níveis distintos: grupo, despesa planejada e classificação.
+Atualizado em 2026-09-30. Versão implementada e instalada: 0.4.2. Além do orçamento em três níveis, existe recuperação administrativa local com backup obrigatório.
 
 ## Arquitetura
 
@@ -26,6 +26,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 ## Funcionalidades concluídas
 
 - Cadastro e login offline, cadastro de familiares por usuário conectado e recuperação individual com código renovado após o uso.
+- Recuperação administrativa local na tela de login para perda simultânea de senha e código. Exige seleção do usuário, confirmação textual exata e nova senha; cria backup anterior, gira senha/código e não autentica identidade além do controle do computador e do banco local.
 - Receitas/despesas com categorias, observações, vencimento, pagamento, edição e exclusão compartilhadas.
 - Dashboard mensal, histórico de seis meses, filtros e orçamento em três níveis: grupo, despesa planejada e classificação. Cada despesa tem previsão e realizado próprios; itens sem grupo permanecem em “Sem grupo”.
 - Meios de pagamento e acumulados mensais; parcelamento de valor total em até 120 parcelas, com distribuição em centavos e ajuste de dias em meses curtos.
@@ -33,7 +34,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Importação local de fatura Itaú XLSX, seleção do cartão, prévia, atualização incremental por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Reexportações com descrição ou identificador mascarado alterados usam uma assinatura secundária por ocorrência; créditos/estornos são informados e ignorados sem bloquear as compras positivas. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
 - CSV/PDF, backup manual, backup diário atualizado nas alterações com retenção de 30 cópias diárias e restauração validada com cópia anterior e novo login.
 - Migrações de schema 1/2/3/4 para 5 com cópia integral anterior obrigatória; preservação dos dados existentes e recusa de bancos futuros.
-- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.4.1 gerado e instalado localmente; artefatos em `release/` ficam fora do Git.
+- Instalador NSIS por usuário, runtime incluído e dados preservados na desinstalação. Instalador 0.4.2 gerado e instalado localmente; artefatos em `release/` ficam fora do Git.
 
 ## Decisões técnicas e regras financeiras
 
@@ -77,7 +78,9 @@ O instalador 0.4.0 foi gerado e instalado sobre a 0.3.2 após backup integral ve
 
 A versão 0.4.1 corrigiu a equivalência incorreta entre despesa planejada e classificação. O teste regressivo confirmou duas despesas distintas no mesmo grupo compartilhando uma classificação. O instalador foi aplicado sobre a 0.4.0; a migração para o schema 5 preservou o banco, converteu previsões existentes em despesas planejadas e gerou backup automático da versão 4. Integridade e chaves estrangeiras foram aprovadas.
 
-Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do instalador atual está em `release/SHA256SUMS-0.4.1.txt`.
+A versão 0.4.2 adicionou a recuperação administrativa local solicitada para o computador do Flávio. O fluxo foi validado de ponta a ponta: lista o usuário local, exige confirmação textual, cria backup anterior, redefine a senha, invalida o código antigo e exibe um novo código. O instalador foi aplicado localmente sobre a 0.4.1 após backup verificado.
+
+Na sessão 2026-09-13, estão registrados testes das telas no runtime e no binário 0.3.0, migração, importação e reimportação em banco isolado. O checksum do instalador atual está em `release/SHA256SUMS-0.4.2.txt`.
 
 Priorizar a validação de atualização e Windows 10, depois alinhar README/requisitos ao estado 0.3.0. Retomar a Store somente com os dados oficiais do titular e o roteiro de publicação. Ao encerrar trabalhos futuros, atualizar este contexto e manter AGENTS.md/CLAUDE.md idênticos, executar verificações proporcionais e conferir commit/push sem incluir projetos vizinhos.
 

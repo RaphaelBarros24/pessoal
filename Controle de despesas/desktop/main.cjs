@@ -16,7 +16,7 @@ const ownsLock = app.requestSingleInstanceLock();
 if (!ownsLock) app.quit();
 let window, store, lastFrame;
 const home = pathToFileURL(path.join(__dirname, '../ui/index.html')).href;
-const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'saveCard', 'payInvoice']);
+const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
 let failures = 0, blockedUntil = 0;
 let invoicePreview = null;
 

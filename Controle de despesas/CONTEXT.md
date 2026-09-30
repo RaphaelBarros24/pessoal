@@ -9,8 +9,12 @@ Conjunto permanente de categorias de despesa usado para organizar o orçamento, 
 _Evitar_: Categoria principal, macro categoria
 
 **Despesa planejada**:
-Categoria de despesa com uma previsão mensal, pertencente a um grupo ou mantida em Sem grupo.
-_Evitar_: Item, subcategoria
+Item nomeado dentro de um grupo, com classificação e previsão mensal próprias, como Mercado classificado em Alimentação.
+_Evitar_: Categoria, classificação
+
+**Classificação**:
+Categoria usada para analisar lançamentos de despesas, compartilhável por várias despesas planejadas.
+_Evitar_: Despesa planejada, grupo
 
 **Previsão do grupo**:
 Valor mensal definido para o grupo, independente da soma das previsões de suas despesas.

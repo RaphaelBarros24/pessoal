@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-09-30 — correção da hierarquia do orçamento
+
+- Corrigida a interpretação do requisito: grupo, despesa planejada e classificação são três conceitos distintos. Um grupo aceita várias despesas, inclusive várias com a mesma classificação, cada uma com previsão própria.
+- Lançamentos podem apontar para uma despesa planejada; o realizado é calculado por esse vínculo. Alterar a classificação da despesa atualiza seus lançamentos vinculados. O schema 5 adiciona `planned_expenses`, `planned_expense_budgets` e o vínculo opcional em `entries`.
+- Diagnóstico reproduzido por teste mínimo antes da correção; `npm.cmd test` aprovou 14/14 e `npm.cmd run test:ui` retornou `SMOKE_OK`. A captura visual confirmou “Necessidades → Mercado → Alimentação”.
+- Instalador 0.4.1 gerado e instalado. SHA-256: `b4a485f47f5ca51f98e249f65a3c965afecde77e02f9e3b7244e864b2a27aa2f`. Backups pré-instalação e pré-migração verificados; banco no schema 5, íntegro e sem violações de chave estrangeira.
+- Pendências: validar em Windows 10 e publicar/distribuir somente quando solicitado. Banco, backups, código de recuperação, instalador e dados pessoais permanecem fora do Git.
+
 ### Sessão 2026-09-30 — orçamento por grupos e despesas
 
 - Versão 0.4.0 implementada: grupos de despesas permanentes, previsão mensal independente no grupo e na categoria, realizado e saldo nos dois níveis, além de área “Sem grupo”.

@@ -1,3 +1,12 @@
+# Saldo Familiar 0.4.1
+
+- Corrigido o modelo do orçamento para três níveis: grupo, despesa planejada e classificação.
+- Um grupo pode conter várias despesas, inclusive várias com a mesma classificação, cada uma com previsão própria.
+- Os lançamentos agora podem indicar a despesa planejada; o realizado é atribuído ao item correto do grupo.
+- A migração para o schema 5 converte previsões e associações criadas na versão 0.4.0 sem apagar grupos ou lançamentos.
+
+Feche o aplicativo e execute `Saldo-Familiar-0.4.1-Windows-x64.exe` na mesma conta do Windows. O banco existente será preservado e migrado automaticamente.
+
 # Saldo Familiar 0.4.0
 
 - O orçamento agora permite criar grupos de despesas, como Necessidades, Lazer e Educação.

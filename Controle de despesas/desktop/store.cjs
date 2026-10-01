@@ -123,13 +123,16 @@ async function openStore(filename) {
         const backups = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backups, { recursive: true });
         fs.copyFileSync(filename, path.join(backups, `antes-atualizacao-v${schemaVersion(db)}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`));
       }
-    } else db.run(`
+    } else {
+      db.run(`
     CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, name TEXT NOT NULL, username TEXT NOT NULL UNIQUE, salt TEXT NOT NULL, hash TEXT NOT NULL, recovery_salt TEXT NOT NULL, recovery_hash TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS categories(id INTEGER PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('expense','income')), UNIQUE(name,type));
     CREATE TABLE IF NOT EXISTS entries(id INTEGER PRIMARY KEY, type TEXT NOT NULL CHECK(type IN ('expense','income')), description TEXT NOT NULL, amount INTEGER NOT NULL CHECK(amount>0), due_date TEXT NOT NULL, paid_date TEXT, category_id INTEGER NOT NULL REFERENCES categories(id), user_id INTEGER NOT NULL REFERENCES users(id), notes TEXT NOT NULL DEFAULT '');
     CREATE TABLE IF NOT EXISTS budgets(month TEXT NOT NULL,category_id INTEGER NOT NULL REFERENCES categories(id),amount INTEGER NOT NULL CHECK(amount>0),PRIMARY KEY(month,category_id));
     PRAGMA user_version=1;`);
-    migrate(db); db.run('PRAGMA foreign_keys=ON');
+    }
+    migrate(db);
+    db.run('PRAGMA foreign_keys=ON');
   } catch (error) { db.close(); throw error; }
   let user = null, backupWarning = null;
   function rows(sql, params = []) {
@@ -137,15 +140,20 @@ async function openStore(filename) {
     try { stmt.bind(params); const result = []; while (stmt.step()) result.push(stmt.getAsObject()); return result; }
     finally { stmt.free(); }
   }
+  function exportDatabase() {
+    const contents = db.export();
+    db.run('PRAGMA foreign_keys=ON');
+    return contents;
+  }
   function persist() {
     const temp = `${filename}.tmp`;
-    fs.writeFileSync(temp, Buffer.from(db.export()), { mode: 0o600 });
+    fs.writeFileSync(temp, Buffer.from(exportDatabase()), { mode: 0o600 });
     fs.renameSync(temp, filename);
     try { automaticBackup(true); backupWarning = null; }
     catch { backupWarning = 'O lançamento foi salvo, mas o backup automático falhou. Verifique o espaço e as permissões da pasta de dados e faça um backup manual.'; }
   }
   function atomic(operation) {
-    const before = db.export();
+    const before = exportDatabase();
     db.run('BEGIN');
     try { const result = operation(); db.run('COMMIT'); persist(); return result; }
     catch (error) { db.close(); db = new SQL.Database(before); db.run('PRAGMA foreign_keys=ON'); throw error; }
@@ -228,7 +236,7 @@ async function openStore(filename) {
       const password = secret(input.password);
       const backupDirectory = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backupDirectory, { recursive: true });
       const safety = path.join(backupDirectory, `antes-recuperacao-administrativa-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`);
-      fs.writeFileSync(safety, Buffer.from(db.export()), { mode: 0o600 });
+      fs.writeFileSync(safety, Buffer.from(exportDatabase()), { mode: 0o600 });
       const salt = crypto.randomBytes(16).toString('hex');
       const recoverySalt = crypto.randomBytes(16).toString('hex');
       const recoveryCode = crypto.randomBytes(18).toString('hex');
@@ -413,7 +421,7 @@ async function openStore(filename) {
       db.run('INSERT INTO budgets(month,category_id,amount) VALUES(?,?,?) ON CONFLICT(month,category_id) DO UPDATE SET amount=excluded.amount', [selectedMonth, categoryId, money(input.amount)]); persist();
     },
     deleteBudget(input) { auth(); db.run('DELETE FROM budgets WHERE month=? AND category_id=?', [month(input.month), id(input.categoryId)]); persist(); },
-    backup(target) { auth(); if (path.resolve(target) === path.resolve(filename)) throw new Error('Escolha outro arquivo para o backup.'); fs.writeFileSync(target, Buffer.from(db.export()), { mode: 0o600 }); },
+    backup(target) { auth(); if (path.resolve(target) === path.resolve(filename)) throw new Error('Escolha outro arquivo para o backup.'); fs.writeFileSync(target, Buffer.from(exportDatabase()), { mode: 0o600 }); },
     restore(source) {
       auth(); let candidate;
       try {
@@ -422,7 +430,7 @@ async function openStore(filename) {
         migrate(candidate);
       } catch { candidate?.close(); throw new Error('Backup inválido ou incompatível. O banco atual foi preservado.'); }
       const safety = path.join(path.dirname(filename), 'backups', `antes-restauracao-${Date.now()}.sqlite`);
-      fs.writeFileSync(safety, Buffer.from(db.export()), { mode: 0o600 });
+      fs.writeFileSync(safety, Buffer.from(exportDatabase()), { mode: 0o600 });
       const original = db;
       try { db = candidate; db.run('PRAGMA foreign_keys=ON'); persist(); }
       catch (error) { db = original; candidate.close(); throw error; }

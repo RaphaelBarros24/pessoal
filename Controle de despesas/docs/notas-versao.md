@@ -1,3 +1,12 @@
+# Saldo Familiar 0.4.3
+
+- Corrigida a abertura do banco após excluir uma despesa planejada que possuía previsões mensais.
+- As chaves estrangeiras do SQLite permanecem ativas também depois de persistências e backups, evitando previsões órfãs.
+- O banco local afetado foi reparado após backup integral verificado; somente cinco previsões ligadas a despesas já excluídas foram removidas.
+- Teste regressivo cobre a exclusão após reabrir o aplicativo e confirma que o banco continua válido.
+
+Feche o aplicativo e execute `Saldo-Familiar-0.4.3-Windows-x64.exe` na mesma conta do Windows. Não há migração de schema.
+
 # Saldo Familiar 0.4.2
 
 - Adicionada recuperação administrativa local para usuários sem senha e sem código de recuperação.

@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-10-01 — correção de banco inválido após excluir despesa planejada
+
+- Diagnosticado e reproduzido o erro de abertura “Banco inválido”: o `sql.js` desativa chaves estrangeiras após `db.export()`, e a exclusão de despesas planejadas podia preservar suas previsões mensais como vínculos órfãos.
+- Versão 0.4.3 reativa `PRAGMA foreign_keys=ON` na abertura e após toda exportação. Teste regressivo cobre reabertura, exclusão com previsão e nova abertura; `npm.cmd test` aprovou 16/16 e `npm.cmd run test:ui` retornou `SMOKE_OK` fora do sandbox.
+- O banco local foi reparado após backup integral verificado: somente cinco registros de `planned_expense_budgets` ligados a despesas já excluídas foram removidos. `integrity_check` retornou `ok`, `foreign_key_check` ficou sem violações e uma cópia abriu pelo código corrigido.
+- Instalador 0.4.3 gerado em staging limpo e instalado. SHA-256: `64e0019ee618254698a504b130801acd6d7e478be8ec849392ef4c924133cd04`. O executável instalado informa 0.4.3 e o `app.asar` contém a correção.
+- Pendência: confirmar manualmente a janela de login, pois o EXE encerrou sem janela na sessão automatizada apesar de o pacote, o banco e o runtime isolado estarem válidos. Cinco pontos de reanálise com nomes corrompidos na raiz impediram o build direto; foram preservados e o empacotamento foi feito em staging temporário.
+
 ### Sessão 2026-09-30 — recuperação administrativa local
 
 - Versão 0.4.2 adiciona **Recuperação administrativa local** na tela de login para perda simultânea de senha e código. O fluxo lista contas do banco local, exige confirmação exata do usuário e nova senha confirmada.

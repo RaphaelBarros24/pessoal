@@ -131,6 +131,28 @@ test('grupo contem varias despesas planejadas com classificacao e previsoes prop
   ]);
 });
 
+test('banco reaberto exclui despesa planejada com suas previsoes sem invalidar o arquivo', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'saldo-planned-delete-'));
+  const file = path.join(dir, 'family.sqlite');
+  let store = await openStore(file);
+  t.after(() => { store?.close(); fs.rmSync(dir, { recursive: true, force: true }); });
+  store.register({ name: 'Ana', username: 'ana', password: 'senha-segura-123' });
+  const category = store.snapshot('2026-10').categories.find(c => c.type === 'expense');
+  const groupId = store.saveExpenseGroup({ name: 'Necessidades' });
+  const plannedExpenseId = store.savePlannedExpense({ name: 'Mercado', groupId, categoryId: category.id });
+  store.savePlannedExpenseBudget({ month: '2026-10', plannedExpenseId, amount: '600,00' });
+  store.close();
+
+  store = await openStore(file);
+  store.login({ username: 'ana', password: 'senha-segura-123' });
+  store.deletePlannedExpense(plannedExpenseId);
+  store.close();
+
+  store = await openStore(file);
+  store.login({ username: 'ana', password: 'senha-segura-123' });
+  assert.equal(store.snapshot('2026-10').plannedExpenses.length, 0);
+});
+
 test('atualizacao migra banco 0.1.0 preservando login, IDs, notas, pagamentos e orcamento', async t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'saldo-migration-'));
   const file = path.join(dir, 'family.sqlite');

@@ -45,12 +45,17 @@ function renderAuth() {
     });
   });
 }
-async function refresh() { state.snapshot = await call('snapshot', state.month); render(); if (state.snapshot.backupWarning) notify(state.snapshot.backupWarning, true); }
+async function refresh() {
+  state.snapshot = await call('snapshot', state.month);
+  if (state.page === 'investments') investmentState.snapshot = await call('investmentSnapshot', { months: investmentState.months });
+  render(); if (state.snapshot.backupWarning) notify(state.snapshot.backupWarning, true);
+}
 function render() {
   const s = state.snapshot;
-  const pages = { dashboard: 'Visão geral', entries: 'Lançamentos', budgets: 'Orçamento', cards: 'Cartões e faturas', imports: 'Importar fatura', categories: 'Categorias', reports: 'Relatórios', family: 'Família e backup' };
-  root.innerHTML = `<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">S</span><span>Saldo<br><b>Familiar</b></span></div><p class="nav-label">SEU ORÇAMENTO</p><nav>${Object.entries(pages).map(([key, label]) => `<button data-action="navigate" data-page="${key}" class="nav-item ${state.page === key ? 'active' : ''}"><span>${icons[key]}</span>${label}</button>`).join('')}</nav><div class="sidebar-note"><span>♡</span><strong>Pequenos hábitos,<br>grandes planos.</strong><p>O orçamento pertence<br>a toda a família.</p></div><div class="profile"><span class="avatar">${esc(s.user.name.slice(0, 1).toUpperCase())}</span><div><strong>${esc(s.user.name)}</strong><small>Orçamento compartilhado</small></div><button data-action="logout" class="icon-button" aria-label="Sair" title="Sair">↪</button></div></aside><main class="workspace"><header class="topbar"><div><span class="breadcrumb">Minha família / ${pages[state.page]}</span><h1>${state.page === 'dashboard' ? `Olá, ${esc(s.user.name.split(' ')[0])} <span class="greeting">☀</span>` : pages[state.page]}</h1><p class="muted">${state.page === 'dashboard' ? 'Veja como está o mês e planeje os próximos passos.' : 'Tudo em um só lugar, para cuidar das contas da casa.'}</p></div><div class="header-actions"><label class="month-picker"><span>Período</span><input id="month" type="month" value="${state.month}" min="1900-01" max="2199-12" aria-label="Mês do orçamento"></label><button class="primary" data-action="new-entry">+ Novo lançamento</button></div></header><div id="content">${({ dashboard, entries: entriesPage, budgets: budgetsPage, cards: cardsPage, imports: importsPage, categories: categoriesPage, reports: reportsPage, family: familyPage })[state.page]()}</div><footer class="workspace-footer"><span>● Dados locais · Sem sincronização entre máquinas</span><span>Orçamento e pagamentos · ${esc(monthLabel(state.month))}</span></footer></main></div>`;
-  document.querySelector('#month').addEventListener('change', event => guarded(async () => { state.month = event.target.value; await refresh(); }));
+  const pages = { dashboard: 'Visão geral', entries: 'Lançamentos', budgets: 'Orçamento', cards: 'Cartões e faturas', investments: 'Investimentos', imports: 'Importar fatura', categories: 'Categorias', reports: 'Relatórios', family: 'Família e backup' };
+  root.innerHTML = `<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">S</span><span>Saldo<br><b>Familiar</b></span></div><p class="nav-label">SEU ORÇAMENTO</p><nav>${Object.entries(pages).map(([key, label]) => `<button data-action="navigate" data-page="${key}" class="nav-item ${state.page === key ? 'active' : ''}"><span>${icons[key] || '↗'}</span>${label}</button>`).join('')}</nav><div class="sidebar-note"><span>♡</span><strong>Pequenos hábitos,<br>grandes planos.</strong><p>O orçamento pertence<br>a toda a família.</p></div><div class="profile"><span class="avatar">${esc(s.user.name.slice(0, 1).toUpperCase())}</span><div><strong>${esc(s.user.name)}</strong><small>Orçamento compartilhado</small></div><button data-action="logout" class="icon-button" aria-label="Sair" title="Sair">↪</button></div></aside><main class="workspace"><header class="topbar"><div><span class="breadcrumb">Minha família / ${pages[state.page]}</span><h1>${state.page === 'dashboard' ? `Olá, ${esc(s.user.name.split(' ')[0])} <span class="greeting">☀</span>` : pages[state.page]}</h1><p class="muted">${state.page === 'dashboard' ? 'Veja como está o mês e planeje os próximos passos.' : state.page === 'investments' ? 'Dê forma aos seus planos. Acompanhe seus CDBs e explore o futuro.' : 'Tudo em um só lugar, para cuidar das contas da casa.'}</p></div>${state.page === 'investments' ? '<div class="header-actions"><button class="secondary" data-action="investment-settings">Premissas</button><button class="primary" data-action="investment-new">+ Novo CDB</button></div>' : `<div class="header-actions"><label class="month-picker"><span>Período</span><input id="month" type="month" value="${state.month}" min="1900-01" max="2199-12" aria-label="Mês do orçamento"></label><button class="primary" data-action="new-entry">+ Novo lançamento</button></div>`}</header><div id="content">${({ dashboard, entries: entriesPage, budgets: budgetsPage, cards: cardsPage, imports: importsPage, categories: categoriesPage, reports: reportsPage, family: familyPage, investments: investmentsPage })[state.page]()}</div><footer class="workspace-footer"><span>● Dados locais · Sem sincronização entre máquinas</span><span>${state.page === 'investments' ? 'CDB · Projeções indicativas' : `Orçamento e pagamentos · ${esc(monthLabel(state.month))}`}</span></footer></main></div>`;
+  document.querySelector('#month')?.addEventListener('change', event => guarded(async () => { state.month = event.target.value; await refresh(); }));
+  if (state.page === 'investments') bindInvestments();
   if (['dashboard', 'entries'].includes(state.page)) document.querySelector('.metrics').insertAdjacentHTML('afterend', paymentSummary());
   if (state.page === 'entries') {
     document.querySelector('#search').addEventListener('input', event => { state.search = event.target.value; document.querySelector('#entry-table').innerHTML = entryTable(filteredEntries()); });
@@ -237,7 +242,7 @@ document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]'); if (!button) return;
   const action = button.dataset.action;
   guarded(async () => {
-    if (action === 'navigate') { state.page = button.dataset.page; render(); }
+    if (action === 'navigate') { state.page = button.dataset.page; if (state.page === 'investments') await refresh(); else render(); }
     else if (action === 'auth-mode') { state.authMode = button.dataset.mode; renderAuth(); }
     else if (action === 'local-admin-recovery') await localAdminRecoveryDialog();
     else if (action === 'logout') { await call('logout'); state.snapshot = null; state.page = 'dashboard'; await initialize(); }
@@ -361,6 +366,7 @@ window.smokeTest = async function () {
   const renewedRecovery = document.querySelector('dialog form'); renewedRecovery.elements.saved.checked = true; renewedRecovery.requestSubmit();
   const loginAfterRecovery = document.querySelector('#auth-form'); loginAfterRecovery.elements.username.value = 'demo'; loginAfterRecovery.elements.password.value = 'nova-senha-demo-123'; loginAfterRecovery.requestSubmit();
   await waitFor(() => !!document.querySelector('#month'), 'Login com a senha administrativa nova falhou');
+  await window.investmentSmokeTest();
 };
 window.upgradeSmokeTest = async function () {
   await initialize();

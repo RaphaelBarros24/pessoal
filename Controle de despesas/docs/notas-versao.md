@@ -1,3 +1,14 @@
+# Saldo Familiar 0.5.0
+
+- Nova tela **Investimentos**, com carteira de CDBs prefixados ou atrelados ao CDI, objetivos, liquidez e vencimento.
+- Projeções brutas/líquidas, gráfico e tabela mensal, cenários de CDI, distribuição por emissor e radar de vencimentos.
+- Simulador de valor inicial e aportes mensais, com juros compostos e IR/IOF calculados por aplicação.
+- Cadastro, edição, exclusão e registro/reabertura de resgate total pelo valor líquido recebido.
+- CDI manual: 10% a.a. é somente um exemplo inicial editável. Os saldos são estimados, sem cotação online nem série histórica.
+- Schema 6 com backup integral antes da migração e preservação do orçamento existente.
+
+Instalador: `Saldo-Familiar-0.5.0-Windows-x64.exe`. Guia e premissas: [Investimentos em CDB](investimentos-cdb.md).
+
 # Saldo Familiar 0.4.3
 
 - Corrigida a abertura do banco após excluir uma despesa planejada que possuía previsões mensais.

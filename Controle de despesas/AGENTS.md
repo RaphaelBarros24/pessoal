@@ -36,6 +36,16 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-10-01 — investimentos em CDB (0.5.0)
+
+- Nova tela Investimentos: aplicações prefixadas ou em percentual do CDI, objetivo, emissor, liquidez, vencimento, cadastro/edição/exclusão e registro/reabertura de resgate total pelo valor efetivamente recebido.
+- Carteira com capital, saldo/ganho líquido estimados, projeção de 3 a 60 meses, gráfico/tabela mensal, cenários de CDI, vencimentos e distribuição por emissor. Simulador independente com aportes mensais por até 120 meses e IR/IOF por lote.
+- Premissas e fontes oficiais em `docs/investimentos-cdb.md`: CDI constante manual (10% inicial é exemplo), dias úteis aproximados por dias corridos × 252/365, rendimento/tributação limitados ao vencimento. Sem saldo histórico real, resgate parcial ou integração automática ao orçamento.
+- Schema 6 com backup obrigatório. `npm.cmd test` aprovou 24/24; sintaxe/whitespace aprovados; smoke da interface no desenvolvimento e no binário empacotado retornou `SMOKE_OK`. Capturas da carteira e do simulador conferidas; largura mínima de 1000 pixels validada.
+- Instalador 0.5.0 gerado em staging limpo, instalado e conteúdo comparado ao código testado. SHA-256: `e00ee96b5295ba29710078cd8934b799c68fa3d9040cdadccafccf4ab2ec6641`. Backup pré-instalação e backup automático de migração verificados; nove tabelas anteriores idênticas, banco íntegro, sem violações de chave estrangeira e carteira vazia.
+- A execução automatizada do EXE exige remover `ELECTRON_RUN_AS_NODE` somente do ambiente do processo filho. A variável herdada explicava a saída imediata registrada na sessão anterior; o binário 0.5.0 passou no smoke e iniciou com ambiente normal.
+- Pendências: Windows 10, distribuição pública e Store continuam sem validação/publicação nesta sessão. Resgates parciais, outros ativos e CDI histórico permanecem fora desta entrega. Encerramento: commit/push somente dos arquivos do projeto; artefatos, banco e dados pessoais ficam fora do Git.
+
 ### Sessão 2026-10-01 — correção de banco inválido após excluir despesa planejada
 
 - Diagnosticado e reproduzido o erro de abertura “Banco inválido”: o `sql.js` desativa chaves estrangeiras após `db.export()`, e a exclusão de despesas planejadas podia preservar suas previsões mensais como vínculos órfãos.

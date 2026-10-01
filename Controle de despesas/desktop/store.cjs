@@ -3,6 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const initSqlJs = require('sql.js');
 const { normalize } = require('./itau.cjs');
+const { createInvestmentService } = require('./investments.cjs');
 
 function text(value, label, max = 120) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(`${label} inválido.`);
@@ -51,7 +52,7 @@ function invoiceDate(purchase, card) {
 function schemaVersion(database) { return database.exec('PRAGMA user_version')[0].values[0][0]; }
 function validateSchema(database) {
   const version = schemaVersion(database);
-  if (![1, 2, 3, 4, 5].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
+  if (![1, 2, 3, 4, 5, 6].includes(version)) throw new Error('Versão do banco incompatível. O arquivo original foi preservado.');
   for (const query of ['SELECT id,name,username,salt,hash,recovery_salt,recovery_hash FROM users', 'SELECT id,name,type FROM categories', 'SELECT id,type,description,amount,due_date,paid_date,category_id,user_id,notes FROM entries', 'SELECT month,category_id,amount FROM budgets']) database.exec(query);
   if (version >= 2) {
     database.exec('SELECT payment_method,installment_group,installment_number,installment_count,budget_month,purchase_date,card_id FROM entries');
@@ -68,11 +69,24 @@ function validateSchema(database) {
     database.exec('SELECT month,planned_expense_id,amount FROM planned_expense_budgets');
     database.exec('SELECT planned_expense_id FROM entries');
   }
+  if (version >= 6) {
+    database.exec('SELECT id,name,issuer,goal,principal,rate_type,rate,start_date,maturity_date,liquidity,notes,redeemed_date,redeemed_net FROM investments');
+    if (database.exec('SELECT cdi,configured FROM investment_settings WHERE id=1')[0]?.values.length !== 1) throw new Error('Premissas de investimentos inválidas.');
+  }
   if (database.exec('PRAGMA integrity_check')[0]?.values[0][0] !== 'ok' || database.exec('PRAGMA foreign_key_check').length) throw new Error('Banco inválido. O arquivo original foi preservado.');
 }
 function migrate(database) {
   validateSchema(database);
-  if (schemaVersion(database) === 5) return;
+  if (schemaVersion(database) === 6) return;
+  if (schemaVersion(database) === 5) {
+    database.run(`BEGIN;
+      CREATE TABLE investments(id INTEGER PRIMARY KEY,name TEXT NOT NULL,issuer TEXT NOT NULL,goal TEXT NOT NULL DEFAULT '',principal INTEGER NOT NULL CHECK(principal>0),rate_type TEXT NOT NULL CHECK(rate_type IN ('cdi','fixed')),rate REAL NOT NULL CHECK(rate>=0),start_date TEXT NOT NULL,maturity_date TEXT NOT NULL,liquidity TEXT NOT NULL CHECK(liquidity IN ('daily','maturity')),notes TEXT NOT NULL DEFAULT '',redeemed_date TEXT,redeemed_net INTEGER CHECK(redeemed_net>0));
+      CREATE TABLE investment_settings(id INTEGER PRIMARY KEY CHECK(id=1),cdi REAL NOT NULL CHECK(cdi>=0 AND cdi<=50),configured INTEGER NOT NULL DEFAULT 0);
+      INSERT INTO investment_settings(id,cdi) VALUES(1,10);
+      PRAGMA user_version=6;
+      COMMIT;`);
+    return;
+  }
   if (schemaVersion(database) === 4) {
     database.run(`BEGIN;
       CREATE TABLE planned_expenses(id INTEGER PRIMARY KEY,name TEXT NOT NULL,group_id INTEGER REFERENCES expense_groups(id) ON DELETE SET NULL,category_id INTEGER NOT NULL REFERENCES categories(id),UNIQUE(group_id,name));
@@ -83,6 +97,7 @@ function migrate(database) {
       UPDATE categories SET group_id=NULL;
       PRAGMA user_version=5;
       COMMIT;`);
+    migrate(database);
     return;
   }
   if (schemaVersion(database) === 3) {
@@ -119,7 +134,7 @@ async function openStore(filename) {
   try {
     if (existed) {
       validateSchema(db);
-      if (schemaVersion(db) < 5) {
+      if (schemaVersion(db) < 6) {
         const backups = path.join(path.dirname(filename), 'backups'); fs.mkdirSync(backups, { recursive: true });
         fs.copyFileSync(filename, path.join(backups, `antes-atualizacao-v${schemaVersion(db)}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.sqlite`));
       }
@@ -190,6 +205,7 @@ async function openStore(filename) {
   }
   persist();
   return {
+    ...createInvestmentService({ rows, run: (sql, params) => db.run(sql, params), atomic, auth, money, date, id, text }),
     status() { return { hasUsers: rows('SELECT id FROM users LIMIT 1').length > 0, user, backupWarning }; },
     localRecoveryUsers() { return rows('SELECT id,name,username FROM users ORDER BY name'); },
     register(input) {

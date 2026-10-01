@@ -18,6 +18,7 @@ let window, store, lastFrame;
 const home = pathToFileURL(path.join(__dirname, '../ui/index.html')).href;
 const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'localRecoveryUsers', 'localAdminRecover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
 let failures = 0, blockedUntil = 0;
+for (const operation of ['investmentSnapshot', 'saveInvestment', 'deleteInvestment', 'redeemInvestment', 'reopenInvestment', 'saveInvestmentSettings', 'simulateInvestment']) allowed.add(operation);
 let invoicePreview = null;
 
 async function exportReport(input) {
@@ -103,6 +104,7 @@ if (ownsLock) app.whenReady().then(async () => {
   await createWindow();
   if (smoke) {
     try {
+      await window.webContents.executeJavaScript(`${fs.readFileSync(path.join(__dirname, '../ui/investments-smoke.js'), 'utf8')}\nvoid 0;`);
       await window.webContents.executeJavaScript(upgradeTest ? 'window.upgradeSmokeTest()' : 'window.smokeTest()');
       await new Promise(resolve => setTimeout(resolve, 500));
       const image = lastFrame || await window.webContents.capturePage();
@@ -120,6 +122,18 @@ if (ownsLock) app.whenReady().then(async () => {
         await window.webContents.executeJavaScript('document.querySelector(\'[data-action="new-entry"]\').click()');
         await new Promise(resolve => setTimeout(resolve, 300));
         fs.writeFileSync(path.join(testRoot, 'entry-form.png'), lastFrame.toPNG());
+        await window.webContents.executeJavaScript('document.querySelector("dialog")?.remove(); state.page="investments"; refresh()');
+        window.setSize(1360, 1700);
+        await new Promise(resolve => setTimeout(resolve, 350));
+        fs.writeFileSync(path.join(testRoot, 'investments.png'), (await window.webContents.capturePage()).toPNG());
+        window.setSize(1000, 800);
+        await new Promise(resolve => setTimeout(resolve, 350));
+        if (await window.webContents.executeJavaScript('document.documentElement.scrollWidth > window.innerWidth')) throw new Error('Tela de investimentos ultrapassa a largura mínima');
+        fs.writeFileSync(path.join(testRoot, 'investments-compact.png'), (await window.webContents.capturePage()).toPNG());
+        window.setSize(1360, 900);
+        await window.webContents.executeJavaScript('investmentSimulation(); document.querySelector("#run-investment-simulation").click()');
+        await new Promise(resolve => setTimeout(resolve, 350));
+        fs.writeFileSync(path.join(testRoot, 'investment-simulation.png'), (await window.webContents.capturePage()).toPNG());
       }
       console.log(upgradeTest ? 'UPGRADE_OK' : 'SMOKE_OK'); app.exit(0);
     } catch (error) { console.error(error); app.exit(1); }

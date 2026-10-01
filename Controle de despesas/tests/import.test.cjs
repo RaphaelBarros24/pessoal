@@ -48,6 +48,7 @@ test('atualização v2 faz cópia integral e restauração preserva deduplicaç�
   const cardId = store.saveCard({ name: 'Itaú teste', closingDay: 25, dueDay: 9 });
   store.close();
   const SQL = await require('sql.js')(); const db = new SQL.Database(fs.readFileSync(filename));
+  db.run('DROP TABLE investments; DROP TABLE investment_settings');
   db.run('DROP INDEX entries_import_key; ALTER TABLE entries DROP COLUMN import_key; ALTER TABLE entries DROP COLUMN classification_pending; DROP TABLE planned_expense_budgets; ALTER TABLE entries DROP COLUMN planned_expense_id; DROP TABLE planned_expenses; DROP TABLE group_budgets; ALTER TABLE categories DROP COLUMN group_id; DROP TABLE expense_groups; PRAGMA user_version=2');
   const original = Buffer.from(db.export()); fs.writeFileSync(filename, original); db.close();
   store = await openStore(filename);

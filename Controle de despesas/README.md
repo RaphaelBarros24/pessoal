@@ -4,11 +4,11 @@ Controle financeiro familiar offline para Windows 10 e 11 de 64 bits, com SQLite
 
 ## Instalar ou atualizar
 
-A versão 0.3.0 adiciona importação de faturas Itaú em Excel e classificação pendente. O instalador gerado fica em `release/Saldo-Familiar-0.3.0-Windows-x64.exe`. Consulte [as instruções de importação](docs/importacao-itau.md).
+A versão 0.5.0 adiciona a tela **Investimentos** com carteira de CDBs, projeções e simulador de aportes. O instalador local fica em `release/Saldo-Familiar-0.5.0-Windows-x64.exe`. Consulte [o guia de CDBs e suas premissas](docs/investimentos-cdb.md) e [as notas de versão](docs/notas-versao.md).
 
-Baixe `Saldo-Familiar-0.2.0-Windows-x64.exe` na [página da versão](https://github.com/RaphaelBarros24/pessoal/releases/tag/v0.2.0). Não exige Node.js, Python ou servidor externo.
+O instalador inclui o runtime: não exige Node.js, Python ou servidor externo. A release pública antiga [v0.2.0](https://github.com/RaphaelBarros24/pessoal/releases/tag/v0.2.0) não contém os recursos atuais; geração local não implica publicação de uma nova release.
 
-Para atualizar, feche o aplicativo e execute o instalador na mesma conta do Windows. Não é necessário desinstalar. A identificação e o caminho do banco permanecem iguais. Antes da migração aditiva, o aplicativo cria uma cópia integral em `backups/antes-atualizacao-v1-*.sqlite`. Usuários, senhas, lançamentos, pagamentos, notas, categorias e limites são preservados. Backups 0.1.0 continuam aceitos.
+Para atualizar, feche o aplicativo e execute o instalador na mesma conta do Windows. Não é necessário desinstalar. A identificação e o caminho do banco permanecem iguais. Antes de migrar bancos antigos para o schema 6, o aplicativo cria uma cópia integral em `backups/antes-atualizacao-v<schema>-*.sqlite`. Usuários, senhas, lançamentos, pagamentos, notas, categorias e limites são preservados. Backups antigos continuam aceitos; versões futuras são recusadas.
 
 Na primeira instalação, crie um usuário e guarde o código de recuperação exibido uma única vez. Em **Família e backup**, cadastre os demais familiares. Cadastre receitas/despesas e limites mensais por categoria.
 
@@ -20,6 +20,7 @@ Na primeira instalação, crie um usuário e guarde o código de recuperação e
 - Cartões com fechamento/vencimento, faturas e registro de pagamento.
 - Importação de Excel (.xlsx) de fatura Itaú, prevenção de duplicados e tela de classificação pendente.
 - Dashboard, histórico de seis meses, filtros, limites e sugestões por regras locais.
+- Investimentos em CDB: cadastro, edição, resgate total, CDI manual, gráfico de evolução, cenários, vencimentos e simulador com aportes mensais e IR/IOF por lote.
 - Relatórios CSV/PDF, backup manual, restauração validada e backup diário atualizado a cada alteração, com retenção de 30 cópias diárias.
 
 ## Parcelas e cartões
@@ -64,7 +65,7 @@ node tests/prepare-upgrade.cjs
 node desktop/launch.cjs --smoke-test --upgrade-test
 ```
 
-Na 0.2.0, sete testes das operações públicas passaram, incluindo migração, parcelas, centavos, fechamento e faturas sem duplicação. Testes das telas passaram pelo runtime de desenvolvimento, incluindo banco antigo fictício. Dashboard, formulário e PDF conferidos visualmente. A política de Controle de Aplicativo desta máquina bloqueou o novo binário empacotado; sua execução e a instalação 0.2.0 permanecem pendentes de validação em outro Windows. Windows 10 ainda não foi testado diretamente. Na 0.1.0, instalação, uso e desinstalação foram validados no Windows 11.
+Na 0.5.0, os 24 testes das operações públicas e cálculos passaram, incluindo migração, backup, CDBs e regressões anteriores. O smoke test percorre os formulários da carteira e do simulador em banco fictício; a tela foi conferida em 1000 e 1360 pixels. Windows 10 ainda requer validação direta.
 
 O `SHA256SUMS.txt` anexado permite verificar o instalador.
 

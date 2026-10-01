@@ -58,6 +58,15 @@
 - Migração aditiva preserva caminho do banco, usuários, senhas, IDs, pagamentos, notas, categorias e limites, com cópia integral anterior obrigatória. Restauração aceita backups antigos.
 - Bancos futuros recusados sem alteração. Testes somente com dados fictícios.
 
+## Atualização 0.5.0 — investimentos
+
+- Pedido: tela de investimentos com controle inicial de CDB e projeções.
+- Implementação: aplicações individuais prefixadas ou em percentual do CDI; objetivo, banco emissor, liquidez e vencimento; edição/exclusão e resgate total pelo valor recebido.
+- Painel com estimativas líquidas/brutas, evolução mensal, vencimentos, distribuição por emissor e cenários de CDI. Simulador independente com aportes mensais e impostos por lote.
+- Premissas explícitas: CDI constante informado manualmente, exemplo inicial de 10% a.a., aproximação de dias úteis e tabela regressiva IR/IOF. O extrato continua sendo a referência para o saldo real.
+- Carteira independente do orçamento; sem operações bancárias, cotação online ou resgates parciais. Guia: `docs/investimentos-cdb.md`.
+- Migração aditiva para schema 6 com backup obrigatório; carteira e premissas incluídas no backup/restauração.
+
 ## Destino da entrega
 
 Repositório autorizado: https://github.com/RaphaelBarros24/pessoal.git.

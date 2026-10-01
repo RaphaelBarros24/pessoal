@@ -1,0 +1,62 @@
+// Loaded only by the Electron smoke runner; all records belong to its isolated database.
+window.investmentSmokeTest = async () => {
+  const waitFor = async (condition, message) => {
+    for (let i = 0; i < 150; i++) { if (condition()) return; await new Promise(resolve => setTimeout(resolve, 30)); }
+    throw new Error(message);
+  };
+  const submit = async (values, message) => {
+    const form = document.querySelector('dialog form');
+    for (const [key, value] of Object.entries(values)) form.elements[key].value = value;
+    form.requestSubmit(); await waitFor(() => !document.querySelector('dialog'), message);
+  };
+  const today = new Date().toLocaleDateString('sv-SE');
+  const later = new Date(`${today}T12:00:00Z`); later.setUTCFullYear(later.getUTCFullYear() + 2);
+  const maturity = later.toISOString().slice(0, 10);
+  const earlier = new Date(`${today}T12:00:00Z`); earlier.setUTCDate(earlier.getUTCDate() - 120);
+  const start = earlier.toISOString().slice(0, 10);
+  const initialBudget = JSON.stringify(state.snapshot.totals);
+  document.querySelector('[data-page="investments"]').click();
+  await waitFor(() => !!document.querySelector('[data-action="investment-new"]'), 'Carteira não abriu');
+  if (!document.querySelector('.empty')) throw new Error('Estado vazio da carteira ausente');
+  document.querySelector('[data-action="investment-new"]').click();
+  await submit({ name: 'Reserva de emergência', issuer: 'Banco Horizonte', amount: '20000,00', rateType: 'cdi', rate: '110', startDate: start, maturityDate: maturity, liquidity: 'daily', goal: 'Tranquilidade para a família' }, 'Cadastro CDB pela tela falhou');
+  const first = investmentState.snapshot.items[0];
+  if (first.principal !== 2000000 || first.rate !== 110) throw new Error('Cadastro CDB perdeu valor/taxa');
+  document.querySelector(`[data-action="investment-details"][data-id="${first.id}"]`).click();
+  document.querySelector('[data-action="investment-edit"]').click();
+  await submit({ amount: '25000,00' }, 'Edição CDB falhou');
+  if (investmentState.snapshot.totals.principal !== 2500000) throw new Error('Total não refletiu edição');
+  await call('saveInvestment', { name: 'Nosso próximo lar', issuer: 'Banco Aurora', amount: '15000', rateType: 'fixed', rate: '12', startDate: start, maturityDate: maturity, liquidity: 'maturity', goal: 'Entrada do apartamento' });
+  await call('saveInvestment', { name: 'Viagem em família', issuer: 'Banco Horizonte', amount: '5000', rateType: 'cdi', rate: '105', startDate: start, maturityDate: today, liquidity: 'daily', goal: 'Férias' });
+  await refresh();
+  document.querySelector('[data-action="investment-settings"]').click();
+  await submit({ cdi: '10,5' }, 'Premissa CDI não salvou');
+  if (investmentState.snapshot.assumptions.cdi !== 10.5) throw new Error('CDI incorreto');
+  const select = document.querySelector('#investment-horizon'); select.value = '24'; select.dispatchEvent(new Event('change'));
+  await waitFor(() => investmentState.snapshot.months === 24, 'Horizonte não mudou');
+  document.querySelector('[data-action="investment-simulate"]').click();
+  const form = document.querySelector('dialog form'); form.elements.months.value = '12';
+  document.querySelector('#run-investment-simulation').click();
+  await waitFor(() => !!document.querySelector('.simulation-result'), 'Simulador não mostrou resultado');
+  if (investmentState.simulation.result.principal !== 1600000) throw new Error('Aportes simulados incorretos');
+  document.querySelector('dialog [data-action="close-modal"]').click(); document.querySelector('dialog').remove();
+  document.querySelector(`[data-action="investment-details"][data-id="${first.id}"]`).click();
+  document.querySelector('[data-action="investment-redeem"]').click();
+  await submit({ date: today, amount: '25900,00' }, 'Registro de resgate falhou');
+  if (investmentState.snapshot.totals.principal !== 2000000) throw new Error('Resgate não saiu da carteira');
+  document.querySelector('[data-tab="redeemed"]').click();
+  if (!document.querySelector('.investment-table').textContent.includes('25.900,00')) throw new Error('Histórico perdeu valor real recebido');
+  document.querySelector(`[data-action="investment-details"][data-id="${first.id}"]`).click();
+  document.querySelector('[data-action="investment-reopen"]').click();
+  await submit({}, 'Reabertura de CDB falhou');
+  document.querySelector('[data-tab="active"]').click();
+  if (investmentState.snapshot.totals.principal !== 4500000) throw new Error('Reabertura não restaurou carteira');
+  const temporary = await call('saveInvestment', { name: 'Excluir teste', issuer: 'Teste', amount: '1', rateType: 'fixed', rate: '0', startDate: start, maturityDate: maturity, liquidity: 'daily' });
+  await refresh();
+  document.querySelector(`[data-action="investment-details"][data-id="${temporary}"]`).click();
+  document.querySelector('[data-action="investment-delete"]').click();
+  await submit({}, 'Exclusão CDB falhou');
+  if (investmentState.snapshot.items.length !== 3) throw new Error('Exclusão não persistiu');
+  if (JSON.stringify(state.snapshot.totals) !== initialBudget) throw new Error('Investimentos alteraram orçamento');
+  document.querySelector('[data-page="dashboard"]').click();
+};

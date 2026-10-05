@@ -241,7 +241,7 @@ test('banco de versao futura e recusado sem alterar seus bytes', async t => {
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const file = path.join(dir, 'family.sqlite'); await createLegacy(file);
   const SQL = await require('sql.js')(); const db = new SQL.Database(fs.readFileSync(file));
-  db.run('PRAGMA user_version=7'); fs.writeFileSync(file, db.export()); db.close();
+  db.run('PRAGMA user_version=8'); fs.writeFileSync(file, db.export()); db.close();
   const original = fs.readFileSync(file);
   await assert.rejects(openStore(file), /incompatível/);
   assert.deepEqual(fs.readFileSync(file), original);

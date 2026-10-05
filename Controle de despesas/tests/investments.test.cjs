@@ -102,12 +102,12 @@ test('simulador tributa cada aporte separadamente e inclui aporte final sem juro
   assert.equal(zero.result.net, 610000);
   assert.equal(store.investmentSnapshot().items.length, 0); // Simulação não cadastra aplicações.
 });
-test('migração 5 para 6 preserva registros e cria backup integral antes de adicionar carteira', async t => {
+test('migração 5 para 7 preserva registros e cria backup integral antes de adicionar carteira', async t => {
   const { store, filename, dir } = await fixture(t); login(store);
   const categoryId = store.snapshot('2026-10').categories.find(c => c.type === 'expense').id;
   store.saveEntry({ type: 'expense', description: 'Preservar', amount: '123,45', dueDate: '2026-10-10', categoryId });
   const SQL = await require('sql.js')(); const db = new SQL.Database(fs.readFileSync(filename));
-  db.run('DROP TABLE investments; DROP TABLE investment_settings; PRAGMA user_version=5');
+  db.run('ALTER TABLE planned_expense_budgets DROP COLUMN realized_entry_id; DROP TABLE investments; DROP TABLE investment_settings; PRAGMA user_version=5');
   const original = Buffer.from(db.export()); db.close(); fs.writeFileSync(filename, original);
   const upgraded = await openStore(filename);
   try {
@@ -117,7 +117,7 @@ test('migração 5 para 6 preserva registros e cria backup integral antes de adi
     const safety = fs.readdirSync(path.join(dir, 'backups')).find(file => file.startsWith('antes-atualizacao-v5-'));
     assert.ok(safety); assert.deepEqual(fs.readFileSync(path.join(dir, 'backups', safety)), original);
     const check = new SQL.Database(fs.readFileSync(filename));
-    assert.equal(check.exec('PRAGMA user_version')[0].values[0][0], 6);
+    assert.equal(check.exec('PRAGMA user_version')[0].values[0][0], 7);
     assert.equal(check.exec('PRAGMA integrity_check')[0].values[0][0], 'ok');
     assert.equal(check.exec('PRAGMA foreign_key_check').length, 0); check.close();
   } finally { upgraded.close(); }

@@ -1,3 +1,12 @@
+# Saldo Familiar 0.6.0
+
+- Realização de previsão em despesa paga pelo próprio orçamento, com vínculo automático e valor efetivamente pago.
+- Previsões mensais recorrentes até um mês final, por até 120 meses, e remoção da previsão de um mês sem excluir os lançamentos.
+- Visão do previsto, realizado, reservado e comprometido no painel, orçamento e PDF. Percentual consumido por grupo e saldo considerando reservas.
+- Schema 7 com backup integral anterior automático. A conversão libera somente a reserva do mês escolhido e impede criar outro lançamento para previsão já vinculada.
+
+Instalador: `Saldo-Familiar-0.6.0-Windows-x64.exe`. Guia: [Previsões recorrentes](previsoes-recorrentes.md).
+
 # Saldo Familiar 0.5.0
 
 - Nova tela **Investimentos**, com carteira de CDBs prefixados ou atrelados ao CDI, objetivos, liquidez e vencimento.

@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-10-01. Versão implementada e instalada: 0.5.0. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
+Atualizado em 2026-10-05. Versão implementada: 0.6.0; instalação pessoal permanece em 0.5.0. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
 
 ## Arquitetura
 
@@ -20,11 +20,13 @@ Aplicativo desktop offline para orçamento familiar, em português do Brasil e r
 
 O fluxo é tela → preload → IPC no processo principal → serviço de persistência → resposta para a tela. O processo principal valida a origem do IPC e controla as operações permitidas. A janela usa sandbox, isolamento de contexto e Node desativado no renderer; navegação externa, novas janelas e permissões são bloqueadas. A CSP da interface impede conexões de rede.
 
-O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas, importação e investimentos usam transação e recuperação do estado anterior em caso de erro. O schema atual é 6, com tabelas `users`, `categories`, `entries`, `budgets`, `cards`, `expense_groups`, `group_budgets`, `planned_expenses`, `planned_expense_budgets`, `investments` e `investment_settings`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
+O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas, importação e investimentos usam transação e recuperação do estado anterior em caso de erro. O schema atual é 7, com tabelas `users`, `categories`, `entries`, `budgets`, `cards`, `expense_groups`, `group_budgets`, `planned_expenses`, `planned_expense_budgets`, `investments` e `investment_settings`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
 
 O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpasta `backups`. Todos os logins do aplicativo compartilham o orçamento na mesma conta do Windows. Contas do Windows distintas usam bancos diferentes. Banco e backups não são criptografados; senhas e códigos de recuperação usam hashes scrypt com salt.
 
 ## Funcionalidades concluídas
+
+- Previsões mensais recorrentes por até 120 meses, conversão direta em despesa paga com vínculo automático e visão de reservado/realizado/comprometido. Guia: `docs/previsoes-recorrentes.md`. Schema 7 adiciona o vínculo da conversão com backup anterior. Saldo previsto desconta também previsões ainda reservadas, sem duplicá-las com seus lançamentos.
 
 - Cadastro e login offline, cadastro de familiares por usuário conectado e recuperação individual com código renovado após o uso.
 - Recuperação administrativa local na tela de login para perda simultânea de senha e código. Exige seleção do usuário, confirmação textual exata e nova senha; cria backup anterior, gira senha/código e não autentica identidade além do controle do computador e do banco local.
@@ -60,7 +62,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Publicar a release atual com instalador e checksum quando solicitado. A geração local não equivale a publicação.
 - Investimentos: resgates parciais, outros ativos, histórico real de CDI/saldos, carência intermediária e relatórios próprios ainda não implementados.
 - Microsoft Store: cadastro e reserva pelo titular, identificadores oficiais, privacidade/contato, ferramenta e pacote MSIX, testes de transferência do banco e atualização. Não houve submissão. O builder configurado usa NSIS; o roteiro registra suporte AppX e ausência de alvo MSIX nativo no builder instalado.
-- Recorrências, importação genérica de extratos e comprovantes não estão implementados e permanecem fora do escopo atual. Sincronização entre máquinas também está fora da configuração escolhida.
+- Recorrências de previsões mensais por prazo definido estão implementadas; importação genérica de extratos e comprovantes não estão implementados e permanecem fora do escopo atual. Sincronização entre máquinas também está fora da configuração escolhida.
 
 ## Bugs conhecidos e limitações
 
@@ -103,3 +105,7 @@ Priorizar a validação em Windows 10 e acompanhar o uso da carteira de CDBs. Re
 - `docs/publicacao-microsoft-store.md`: roteiro e pendências de publicação.
 - `CONTEXT.md`: vocabulário canônico de grupos, despesas planejadas, previsões e realizado.
 - `docs/agents/`: convenções de domínio, triagem e issue tracker. Nenhum ADR foi necessário para esta evolução aditiva.
+
+## Verificação 2026-10-05
+
+Versão 0.6.0: 27/27 testes, sintaxe e whitespace aprovados. Interface de desenvolvimento e EXE empacotado retornaram `SMOKE_OK`, incluindo recorrência e conversão. Captura do orçamento conferida; desktop/ui do pacote idênticos ao código final. Migração de schema 6 para 7 validada em banco fictício com backup byte a byte, integridade e chaves estrangeiras. Instalador gerado com dependências completas; checksum em `release/SHA256SUMS-0.6.0.txt`. Instalação pessoal e banco real não alterados. Próximo passo: instalar 0.6.0 para uso pessoal e validar Windows 10.

@@ -16,7 +16,7 @@ const ownsLock = app.requestSingleInstanceLock();
 if (!ownsLock) app.quit();
 let window, store, lastFrame;
 const home = pathToFileURL(path.join(__dirname, '../ui/index.html')).href;
-const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'localRecoveryUsers', 'localAdminRecover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
+const allowed = new Set(['status', 'register', 'login', 'logout', 'recover', 'localRecoveryUsers', 'localAdminRecover', 'snapshot', 'saveEntry', 'deleteEntry', 'deleteSeries', 'addCategory', 'saveBudget', 'deleteBudget', 'saveExpenseGroup', 'deleteExpenseGroup', 'assignCategoryGroup', 'saveGroupBudget', 'deleteGroupBudget', 'savePlannedExpense', 'deletePlannedExpense', 'savePlannedExpenseBudget', 'realizePlannedExpense', 'deletePlannedExpenseBudget', 'saveCard', 'payInvoice']);
 let failures = 0, blockedUntil = 0;
 for (const operation of ['investmentSnapshot', 'saveInvestment', 'deleteInvestment', 'redeemInvestment', 'reopenInvestment', 'saveInvestmentSettings', 'simulateInvestment']) allowed.add(operation);
 let invoicePreview = null;

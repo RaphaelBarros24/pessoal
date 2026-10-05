@@ -36,6 +36,15 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-10-05 — previsões recorrentes e baixa direta (0.6.0)
+
+- Orçamento permite realizar a previsão diretamente pelo valor efetivamente pago, com vínculo e baixa automáticos em transação única. O valor previsto permanece para comparação e a reserva do mês é liberada; meses seguintes são preservados. Lançamento já vinculado deve ser editado, evitando duplicação.
+- Previsões podem ser repetidas mensalmente até um mês final, por até 120 meses, com remoção individual da previsão sem excluir pagamentos. Guia e limites em `docs/previsoes-recorrentes.md`.
+- Painel, orçamento e PDF mostram previsto, realizado, ainda reservado e comprometido. Grupos mostram percentual consumido e saldo após reservas. Saldo previsto desconta também reservas; mantém a regra anterior para pagamentos pendentes. CSV e histórico continuam baseados em lançamentos.
+- Schema 7 adiciona vínculo da conversão. Migrações com backup integral verificado, reabertura, exclusão e alteração do mês/vínculo cobertas por testes fictícios. `npm.cmd test`: 27/27; sintaxe e whitespace aprovados; interface de desenvolvimento e EXE empacotado retornaram `SMOKE_OK`; captura do orçamento conferida.
+- Instalador 0.6.0 gerado em staging com dependências completas; desktop/ui empacotados idênticos ao código final. SHA-256: `6be7dc5cb35f98d5841a54a1f9ad3b743a8f34585f017d29968f319e5534e9b6`. Dados pessoais e instalação 0.5.0 não alterados.
+- Pendências: instalar 0.6.0 para uso pessoal; validar Windows 10. Publicação de release e Store continuam pendentes. Encerramento autorizado com commit/push somente dos arquivos do projeto; banco, backups, instaladores e projetos vizinhos fora do Git.
+
 ### Sessão 2026-10-01 — investimentos em CDB (0.5.0)
 
 - Nova tela Investimentos: aplicações prefixadas ou em percentual do CDI, objetivo, emissor, liquidez, vencimento, cadastro/edição/exclusão e registro/reabertura de resgate total pelo valor efetivamente recebido.

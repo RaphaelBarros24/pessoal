@@ -244,7 +244,21 @@ function plannedExpenseDialog(plannedExpenseId) {
 function realizePlannedExpenseDialog(itemId) {
   const item = state.snapshot.plannedExpenses.find(p => p.id === Number(itemId));
   const today = new Date().toLocaleDateString('sv-SE');
-  modal('Realizar previsão e dar baixa', `<p>${esc(item.name)} · ${esc(monthLabel(state.month))}. Previsto: ${money(item.limit)}. A reserva deste mês será substituída pelo valor real pago.</p><div class="form-grid">${field('Valor efetivamente pago (R$)', 'amount', 'text', (item.limit / 100).toFixed(2).replace('.', ','), 'required inputmode="decimal"')}${field('Vencimento', 'dueDate', 'date', today.slice(0,7) === state.month ? today : `${state.month}-01`, 'required')}${field('Data do pagamento', 'paidDate', 'date', today, 'required')}${select('Forma de pagamento', 'paymentMethod', Object.entries(paymentLabels).filter(([key]) => key !== 'credit_card').map(([key,label]) => `<option value="${key}">${esc(label)}</option>`).join(''))}${field('Observações', 'notes')}</div>`, 'Transformar em real e dar baixa', async data => { await call('realizePlannedExpense', { ...data, month: state.month, plannedExpenseId: item.id }); await refresh(); notify('Previsão realizada e paga, com vínculo automático.'); });
+  const defaultDate = today.slice(0, 7) === state.month ? today : `${state.month}-01`;
+  modal('Realizar previsão e dar baixa', `<p>${esc(item.name)} · ${esc(monthLabel(state.month))}. Previsto: ${money(item.limit)}. A reserva deste mês será substituída pelo valor real.</p><div class="form-grid">${field('Valor real (R$)', 'amount', 'text', (item.limit / 100).toFixed(2).replace('.', ','), 'required inputmode="decimal"')}${select('Forma de pagamento', 'paymentMethod', Object.entries(paymentLabels).map(([key,label]) => `<option value="${key}">${esc(label)}</option>`).join(''))}${field('Vencimento', 'dueDate', 'date', defaultDate, 'required')}${field('Data do pagamento', 'paidDate', 'date', today, 'required')}${select('Cartão', 'cardId', '<option value="">Selecione o cartão</option>' + options(state.snapshot.cards))}${field('Data da compra', 'purchaseDate', 'date', defaultDate)}${field('Observações', 'notes')}</div><p id="realization-hint" class="hint"></p>`, 'Transformar em real e dar baixa', async data => { await call('realizePlannedExpense', { ...data, month: state.month, plannedExpenseId: item.id }); await refresh(); notify(data.paymentMethod === 'credit_card' ? 'Previsão realizada e incluída na fatura do cartão.' : 'Previsão realizada e paga, com vínculo automático.'); }, form => {
+    const update = () => {
+      const credit = form.elements.paymentMethod.value === 'credit_card';
+      for (const name of ['cardId', 'purchaseDate', 'dueDate', 'paidDate']) {
+        const input = form.elements[name];
+        const active = ['cardId', 'purchaseDate'].includes(name) ? credit : !credit;
+        input.disabled = !active; input.required = active; input.closest('label').hidden = !active;
+      }
+      form.querySelector('[type="submit"]').textContent = credit ? 'Realizar e incluir na fatura' : 'Transformar em real e dar baixa';
+      form.querySelector('#realization-hint').textContent = credit ? (state.snapshot.cards.length ? 'A compra consome a previsão deste mês. O vencimento será calculado pelo cartão; o pagamento será registrado na fatura, sem duplicar a despesa.' : 'Cadastre primeiro um cartão em Cartões e faturas.') : 'A data do pagamento dará baixa neste lançamento.';
+    };
+    form.elements.paymentMethod.addEventListener('change', update);
+    update();
+  });
 }
 function confirmDialog(title, message, onConfirm) { modal(title, `<p>${esc(message)}</p>`, 'Confirmar', onConfirm); }
 document.addEventListener('click', event => {
@@ -352,6 +366,19 @@ window.smokeTest = async function () {
   await waitFor(() => !document.querySelector('dialog'), 'Conversão da previsão pela tela falhou');
   if (state.snapshot.totals.reserved !== 0 || !state.snapshot.entries.some(e => e.plannedExpenseId === testedGroup.items[0].id && e.paidDate === '2026-09-15' && e.amount === 55000)) throw new Error('Conversão não liberou reserva ou não deu baixa');
   if ((await call('snapshot', '2026-11')).totals.reserved !== 60000 || (await call('snapshot', '2026-12')).totals.reserved !== 0) throw new Error('Período da recorrência incorreto');
+  const cardPlanId = await call('savePlannedExpense', { name: 'Serviço no cartão', groupId: group.id, categoryId: testedGroup.items[0].categoryId });
+  await call('savePlannedExpenseBudget', { month: state.month, plannedExpenseId: cardPlanId, amount: '200' });
+  const priorCardDue = (await call('snapshot', '2026-10')).totals.cardDue;
+  await refresh();
+  document.querySelector(`[data-action="realize-planned-expense"][data-id="${cardPlanId}"]`).click();
+  const cardRealization = document.querySelector('dialog form');
+  if (!Array.from(cardRealization.elements.paymentMethod.options).some(option => option.value === 'credit_card')) throw new Error('Cartão de crédito ausente na conversão');
+  cardRealization.elements.paymentMethod.value = 'credit_card'; cardRealization.elements.paymentMethod.dispatchEvent(new Event('change'));
+  if (!cardRealization.elements.paidDate.disabled || !cardRealization.elements.cardId.required) throw new Error('Campos da conversão no cartão incorretos');
+  cardRealization.elements.cardId.value = String(state.snapshot.cards[0].id); cardRealization.elements.purchaseDate.value = '2026-09-15'; cardRealization.requestSubmit();
+  await waitFor(() => !document.querySelector('dialog'), 'Conversão no cartão pela tela falhou');
+  if (state.snapshot.totals.reserved !== 0 || !state.snapshot.budgetEntries.some(e => e.plannedExpenseId === cardPlanId && e.paymentMethod === 'credit_card' && !e.paidDate)) throw new Error('Conversão não criou compra no cartão');
+  if ((await call('snapshot', '2026-10')).totals.cardDue !== priorCardDue + 20000) throw new Error('Conversão no cartão não acumulou na fatura');
   for (const page of ['entries', 'budgets', 'cards', 'categories', 'reports', 'family', 'dashboard']) { document.querySelector(`[data-action="navigate"][data-page="${page}"]`).click(); if (!document.querySelector('#content')) throw new Error('Navegação falhou'); }
   await call('exportReport', { month: state.month, format: 'csv' });
   await call('exportReport', { month: state.month, format: 'pdf' });

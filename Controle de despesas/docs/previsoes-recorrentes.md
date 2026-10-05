@@ -4,7 +4,9 @@ Na tela **Orçamento**, cadastre ou edite uma despesa e informe **Repetir mensal
 
 Para pagar, use **Realizar e dar baixa** na linha da despesa. Informe o valor efetivamente pago, vencimento no mês da previsão, data do pagamento e forma de pagamento. A operação cria o lançamento real e seu vínculo automaticamente, em uma única transação. A previsão original permanece disponível para comparação, mas a reserva daquele mês é liberada integralmente, inclusive se o valor pago for menor ou maior que o previsto. Os meses seguintes permanecem provisionados.
 
-Se já houver lançamento vinculado, a tela oferece **Ver lançamento / dar baixa**. A conversão recusa criar outro lançamento para o mesmo item/mês. Despesas com várias compras vinculadas continuam permitindo acompanhamento parcial: sua reserva é a diferença positiva entre previsão e valor lançado, até que consumida. O fluxo de conversão direta é para uma despesa ainda sem lançamento vinculado. Pagamentos de cartão continuam pela compra/fatura.
+Para **Cartão de crédito**, selecione o cartão cadastrado e informe a data da compra no mês da previsão. A conversão cria uma compra única vinculada à previsão, libera sua reserva e calcula o vencimento conforme fechamento/vencimento do cartão. A compra consome o orçamento do mês da previsão; o pagamento fica pendente na fatura correspondente, onde deve ser baixado. Os campos de vencimento manual e data do pagamento são ocultados. Não é criada uma segunda despesa ao pagar a fatura. Parcelamentos continuam no formulário de lançamentos.
+
+Se já houver lançamento vinculado, a tela oferece **Ver lançamento / dar baixa**. A conversão recusa criar outro lançamento para o mesmo item/mês. Despesas com várias compras vinculadas continuam permitindo acompanhamento parcial: sua reserva é a diferença positiva entre previsão e valor lançado, até que consumida. O fluxo de conversão direta é para uma despesa ainda sem lançamento vinculado.
 
 O painel e o orçamento mostram:
 

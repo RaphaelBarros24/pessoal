@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-10-05. Versão implementada: 0.6.0; instalação pessoal permanece em 0.5.0. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
+Atualizado em 2026-10-05. Versão implementada: 0.6.1; instalação pessoal não alterada nesta sessão. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
 
 ## Arquitetura
 
@@ -109,3 +109,7 @@ Priorizar a validação em Windows 10 e acompanhar o uso da carteira de CDBs. Re
 ## Verificação 2026-10-05
 
 Versão 0.6.0: 27/27 testes, sintaxe e whitespace aprovados. Interface de desenvolvimento e EXE empacotado retornaram `SMOKE_OK`, incluindo recorrência e conversão. Captura do orçamento conferida; desktop/ui do pacote idênticos ao código final. Migração de schema 6 para 7 validada em banco fictício com backup byte a byte, integridade e chaves estrangeiras. Instalador gerado com dependências completas; checksum em `release/SHA256SUMS-0.6.0.txt`. Instalação pessoal e banco real não alterados. Próximo passo: instalar 0.6.0 para uso pessoal e validar Windows 10.
+
+## Correção 0.6.1 em 2026-10-05
+
+Cartão de crédito incluído na realização de previsão: seleção do cartão e data da compra, vencimento calculado e pagamento pela fatura. Reserva liberada no mês da previsão, sem duplicar gasto. Schema 7 mantido. Regressão reproduzida antes da correção; 28/28 testes aprovados e interface de desenvolvimento/EXE retornaram `SMOKE_OK`. Desktop/ui empacotados idênticos aos fontes. Instalador 0.6.1 e checksum locais em `release/`. Banco pessoal e instalação não alterados.

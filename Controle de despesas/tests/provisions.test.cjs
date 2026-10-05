@@ -49,7 +49,7 @@ test('validação e lançamento já vinculado impedem conversões incorretas', a
   const input = { month: '2026-10', plannedExpenseId, amount: '120,00', dueDate: '2026-10-05', paidDate: '2026-10-05' };
   assert.throws(() => store.realizePlannedExpense({ ...input, paidDate: '' }), /Data inválida/);
   assert.throws(() => store.realizePlannedExpense({ ...input, dueDate: '2026-11-05' }), /vencimento/);
-  assert.throws(() => store.realizePlannedExpense({ ...input, paymentMethod: 'credit_card' }), /à vista/);
+  assert.throws(() => store.realizePlannedExpense({ ...input, paymentMethod: 'credit_card' }), /fatura do cartão/);
   assert.throws(() => store.savePlannedExpenseBudget({ month: '2026-10', endMonth: '2026-09', plannedExpenseId, amount: '1' }), /período/);
   assert.throws(() => store.savePlannedExpenseBudget({ month: '2026-10', endMonth: '2036-10', plannedExpenseId, amount: '1' }), /período/);
   assert.equal(store.snapshot('2026-10').totals.reserved, 10000);
@@ -81,4 +81,37 @@ test('migração v6 cria backup integral e conversão persiste com integridade',
   const check = new SQL.Database(fs.readFileSync(filename));
   assert.equal(check.exec('PRAGMA integrity_check')[0].values[0][0], 'ok');
   assert.equal(check.exec('PRAGMA foreign_key_check').length, 0); check.close();
+});
+
+test('previsão realizada no cartão entra na fatura e preserva consumo sem duplicar', async t => {
+  const { store, plannedExpenseId } = await fixture(t);
+  const cardId = store.saveCard({ name: 'Cartão teste', closingDay: 20, dueDay: 5 });
+  store.savePlannedExpenseBudget({ month: '2026-10', endMonth: '2026-11', plannedExpenseId, amount: '100' });
+  const input = { month: '2026-10', plannedExpenseId, amount: '110', paymentMethod: 'credit_card', cardId, purchaseDate: '2026-10-20' };
+  assert.throws(() => store.realizePlannedExpense({ ...input, cardId: 99999 }), /Cartão não encontrado/);
+  assert.throws(() => store.realizePlannedExpense({ ...input, purchaseDate: '2026-11-20' }), /mês da previsão/);
+  assert.throws(() => store.realizePlannedExpense({ ...input, paidDate: '2026-10-20' }), /fatura do cartão/);
+  assert.equal(store.snapshot('2026-10').totals.reserved, 10000);
+  const entryId = store.realizePlannedExpense(input);
+  const october = store.snapshot('2026-10');
+  assert.equal(october.totals.reserved, 0);
+  assert.equal(october.totals.committed, 11000);
+  assert.equal(october.totals.pending, 0);
+  const purchase = october.budgetEntries.find(e => e.id === entryId);
+  assert.equal(purchase.cardId, cardId);
+  assert.equal(purchase.paidDate, null);
+  assert.equal(purchase.purchaseDate, '2026-10-20');
+  assert.equal(purchase.dueDate, '2026-12-05');
+  assert.equal(store.snapshot('2026-11').totals.reserved, 10000);
+  const december = store.snapshot('2026-12');
+  assert.equal(december.totals.expense, 0);
+  assert.equal(december.totals.cardDue, 11000);
+  assert.equal(december.totals.pending, 11000);
+  store.payInvoice({ cardId, month: '2026-12', paidDate: '2026-12-05' });
+  assert.equal(store.snapshot('2026-12').totals.pending, 0);
+  assert.equal(store.snapshot('2026-10').totals.committed, 11000);
+  store.payInvoice({ cardId, month: '2026-12', paidDate: '' });
+  assert.equal(store.snapshot('2026-12').totals.pending, 11000);
+  assert.equal(store.snapshot('2026-10').totals.reserved, 0);
+  assert.throws(() => store.realizePlannedExpense(input), /já tem/);
 });

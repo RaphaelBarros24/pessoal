@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-10-05 — cartão na realização de previsão (0.6.1)
+
+- Corrigida a exclusão de cartão de crédito no formulário e no backend da conversão. Agora permite selecionar cartão cadastrado e data da compra no mês da previsão, calculando vencimento e acumulando a compra na fatura.
+- A reserva do mês é liberada e a compra consome o orçamento uma única vez. Pagamento/reabertura seguem pela fatura; campos de vencimento manual/pagamento ficam ocultos para cartão. Conversão cria compra única; parcelas continuam no formulário de lançamentos. Schema 7 mantido, sem nova migração.
+- Regressão reproduzida antes da correção. Suíte 28/28 aprovada; testes adicionais de cartão cobrem fechamento, valor real diferente, recorrência preservada, duplicação, validações e pagamento/reabertura da fatura. Interface de desenvolvimento e EXE 0.6.1 retornaram `SMOKE_OK`; sintaxe, diff e igualdade desktop/ui do pacote aprovados.
+- Instalador 0.6.1 gerado com dependências completas. SHA-256: `8ebbfa6b1b1ccac5cf44b05a1a7ff00f4d8e879bb2a8c66dd1ab2bb628947b24`. Instalação e banco pessoais não alterados nesta sessão; artefatos e dados pessoais fora do Git.
+- Pendências: instalar 0.6.1 para usar a correção; Windows 10, release pública e Store continuam pendentes. Encerramento autorizado com commit/push somente dos arquivos deste projeto.
+
 ### Sessão 2026-10-05 — previsões recorrentes e baixa direta (0.6.0)
 
 - Orçamento permite realizar a previsão diretamente pelo valor efetivamente pago, com vínculo e baixa automáticos em transação única. O valor previsto permanece para comparação e a reserva do mês é liberada; meses seguintes são preservados. Lançamento já vinculado deve ser editado, evitando duplicação.

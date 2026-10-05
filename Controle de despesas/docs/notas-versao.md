@@ -1,3 +1,11 @@
+# Saldo Familiar 0.6.1
+
+- Cartão de crédito disponível na conversão de previsão, com seleção do cartão e data da compra.
+- A compra realiza a previsão e entra na fatura com vencimento calculado automaticamente. O pagamento é registrado pela fatura, sem duplicar o gasto no orçamento.
+- Formulário alterna entre pagamento à vista e compra no cartão. Mantido o schema 7.
+
+Instalador: `Saldo-Familiar-0.6.1-Windows-x64.exe`.
+
 # Saldo Familiar 0.6.0
 
 - Realização de previsão em despesa paga pelo próprio orçamento, com vínculo automático e valor efetivamente pago.

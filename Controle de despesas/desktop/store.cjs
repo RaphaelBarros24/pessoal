@@ -436,12 +436,25 @@ async function openStore(filename) {
       const plan = rows('SELECT p.*,b.amount,b.realized_entry_id FROM planned_expenses p JOIN planned_expense_budgets b ON b.planned_expense_id=p.id WHERE p.id=? AND b.month=?', [plannedExpenseId, selectedMonth])[0];
       if (!plan) throw new Error('Não há previsão para esta despesa no mês escolhido.');
       if (plan.realized_entry_id || rows("SELECT id FROM entries WHERE planned_expense_id=? AND COALESCE(budget_month,substr(due_date,1,7))=?", [plannedExpenseId, selectedMonth]).length) throw new Error('Esta previsão já tem lançamento vinculado. Edite e dê baixa no lançamento existente.');
-      const amount = money(input.amount), dueDate = date(input.dueDate), paidDate = date(input.paidDate);
-      if (dueDate.slice(0, 7) !== selectedMonth) throw new Error('O vencimento deve pertencer ao mês da previsão.');
       const method = input.paymentMethod || 'unspecified';
-      if (!Object.hasOwn(paymentLabels, method) || method === 'credit_card') throw new Error('Escolha uma forma de pagamento à vista. Cartão deve ser registrado pela compra e fatura.');
+      if (!Object.hasOwn(paymentLabels, method)) throw new Error('Forma de pagamento inválida.');
+      const amount = money(input.amount);
+      let dueDate, paidDate = null, purchaseDate = null, cardId = null, budgetMonth = null;
+      if (method === 'credit_card') {
+        if (input.paidDate) throw new Error('Registre o pagamento pela fatura do cartão.');
+        cardId = id(input.cardId);
+        const card = rows('SELECT * FROM cards WHERE id=?', [cardId])[0];
+        if (!card) throw new Error('Cartão não encontrado.');
+        purchaseDate = date(input.purchaseDate);
+        if (purchaseDate.slice(0, 7) !== selectedMonth) throw new Error('A data da compra deve pertencer ao mês da previsão.');
+        dueDate = invoiceDate(purchaseDate, card);
+        budgetMonth = selectedMonth;
+      } else {
+        dueDate = date(input.dueDate); paidDate = date(input.paidDate);
+        if (dueDate.slice(0, 7) !== selectedMonth) throw new Error('O vencimento deve pertencer ao mês da previsão.');
+      }
       return atomic(() => {
-        db.run('INSERT INTO entries(type,description,amount,due_date,paid_date,category_id,planned_expense_id,notes,user_id,payment_method) VALUES(?,?,?,?,?,?,?,?,?,?)', ['expense', plan.name, amount, dueDate, paidDate, plan.category_id, plannedExpenseId, typeof input.notes === 'string' ? input.notes.slice(0, 2000) : '', user.id, method]);
+        db.run('INSERT INTO entries(type,description,amount,due_date,paid_date,category_id,planned_expense_id,notes,user_id,payment_method,card_id,purchase_date,budget_month) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)', ['expense', plan.name, amount, dueDate, paidDate, plan.category_id, plannedExpenseId, typeof input.notes === 'string' ? input.notes.slice(0, 2000) : '', user.id, method, cardId, purchaseDate, budgetMonth]);
         const entryId = rows('SELECT last_insert_rowid() AS id')[0].id;
         db.run('UPDATE planned_expense_budgets SET realized_entry_id=? WHERE month=? AND planned_expense_id=?', [entryId, selectedMonth, plannedExpenseId]);
         return entryId;

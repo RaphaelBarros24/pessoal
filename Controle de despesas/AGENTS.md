@@ -36,6 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
+### Sessão 2026-10-06 — diagnóstico de diferença na fatura fechada (em andamento)
+
+- Comparada em leitura a fatura fechada local com os lançamentos do cartão no mês do vencimento. Todas as compras positivas da planilha estão presentes; três compras manuais fora do arquivo e créditos/estornos ignorados explicam integralmente a diferença.
+- Cadastro do ciclo do cartão diverge das datas da fatura fornecida. Solicitada confirmação do fechamento real e do destino das compras manuais, preservando vínculos de previsões e estado de pagamento.
+- Criado backup integral em `.local-data/`, com igualdade SHA-256 verificada. Banco original íntegro e sem violações de chaves estrangeiras; nenhum lançamento pessoal alterado.
+- Conferência executada pelo parser real e comparação por data, valor e parcela. A soma bruta do parser falha na comparação com o total líquido por ignorar estornos, limitação já documentada. Não houve alteração funcional nem geração de instalador; testes gerais não repetidos nesta etapa de diagnóstico.
+- Pendências: confirmar ciclo e compras com o usuário; definir tratamento dos créditos, simular correção em cópia e obter autorização para a alteração exata no banco pessoal. Dados, descrições, valores, planilha e backup ficam fora do Git.
+
 ### Sessão 2026-10-05 — cartão na realização de previsão (0.6.1)
 
 - Corrigida a exclusão de cartão de crédito no formulário e no backend da conversão. Agora permite selecionar cartão cadastrado e data da compra no mês da previsão, calculando vencimento e acumulando a compra na fatura.

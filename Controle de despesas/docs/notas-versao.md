@@ -1,3 +1,12 @@
+# Saldo Familiar 0.6.2
+
+- Faturas Itaú fechadas conciliadas pelo total líquido declarado e pelo vencimento oficial do Excel.
+- Créditos e estornos registrados e deduplicados, com detalhe na fatura e desconto no total e no pagamento pendente.
+- Compras manuais posteriores ausentes do arquivo fechado preservadas na próxima fatura, mantendo orçamento, vínculos e pagamento. Divergências anteriores cancelam toda a atualização.
+- Schema 8, com backup integral obrigatório antes da migração.
+
+Instalador: `Saldo-Familiar-0.6.2-Windows-x64.exe`. Guia: [Importação Itaú](importacao-itau.md).
+
 # Saldo Familiar 0.6.1
 
 - Cartão de crédito disponível na conversão de previsão, com seleção do cartão e data da compra.

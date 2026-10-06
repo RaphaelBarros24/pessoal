@@ -15,6 +15,47 @@ async function setup(t) {
   return { dir, store, cardId };
 }
 const item = (description, amount = 1000) => ({ description, amount, purchaseDate: '2026-09-10', installmentNumber: 1, installmentCount: 1, sourceCard: '****0000' });
+
+test('fatura fechada concilia estornos e preserva compras manuais ausentes no próximo ciclo', async t => {
+  const { store, cardId, dir } = await setup(t);
+  const categoryId = store.snapshot('2026-09').categories.find(c => c.name === 'Lazer').id;
+  const manualId = store.saveEntry({ description: 'Compra posterior', type: 'expense', amount: '7', categoryId, paymentMethod: 'credit_card', cardId, purchaseDate: '2026-09-20', dueDate: '2026-10-09' });
+  store.payInvoice({ cardId, month: '2026-10', paidDate: '2026-10-02' });
+  const workbook = new ExcelJS.Workbook(), sheet = workbook.addWorksheet('Fatura');
+  sheet.addRow([null, 'Fatura Fechada - Outubro/2026']);
+  sheet.addRow([null, 'Cartão', null, null, null, null, 'Valor', null, 'Vencimento']);
+  sheet.addRow([null, 'Cartão teste', null, null, null, null, 18.50, null, new Date('2026-10-09T00:00:00Z')]);
+  sheet.addRow([null, 'Data', 'Lançamento', 'Parcelamento', 'Valor']);
+  sheet.addRow([null, new Date('2026-09-10T00:00:00Z'), 'Compra confirmada', null, 20]);
+  sheet.addRow([null, new Date('2026-09-11T00:00:00Z'), 'Estorno confirmado', null, -1.50]);
+  sheet.addRow([null, new Date('2026-09-12T00:00:00Z'), 'Pagamento Efetuado', null, -300]);
+  const filename = path.join(dir, 'fechada.xlsx'); await workbook.xlsx.writeFile(filename);
+  const invoice = await readItau(filename);
+  assert.equal(invoice.netTotal ?? invoice.entries.reduce((sum, e) => sum + e.amount, 0), 1850);
+  assert.equal(invoice.isClosed, true);
+  assert.equal(invoice.declaredTotal, 1850);
+  assert.equal(invoice.creditEntries.length, 1);
+  const result = store.importInvoice({ cardId, invoice });
+  assert.equal(result.deferred, 1);
+  assert.equal(result.creditsImported, 1);
+  const october = store.snapshot('2026-10');
+  assert.equal(october.invoices[0].amount, 1850);
+  assert.equal(october.invoices[0].dueDate, '2026-10-09');
+  assert.equal(october.invoices[0].creditTotal, 150);
+  const later = store.snapshot('2026-11').invoices[0].entries.find(e => e.id === manualId);
+  assert.equal(later.amount, 700);
+  assert.equal(later.budgetMonth, '2026-09');
+  assert.equal(later.paidDate, '2026-10-02');
+  assert.equal(store.importInvoice({ cardId, invoice }).creditsImported, 0);
+  assert.equal(store.snapshot('2026-10').invoices[0].amount, 1850);
+  store.payInvoice({ cardId, month: '2026-10', paidDate: '2026-10-09' });
+  assert.equal(store.snapshot('2026-10').invoices[0].outstanding, 0);
+  store.payInvoice({ cardId, month: '2026-10', paidDate: '' });
+  assert.equal(store.snapshot('2026-10').invoices[0].outstanding, 1850);
+  const backup = path.join(dir, 'credits.sqlite'); store.backup(backup); store.restore(backup);
+  store.login({ username: 'teste', password: 'senha-teste-123' });
+  assert.equal(store.snapshot('2026-10').invoices[0].amount, 1850);
+});
 test('importação preserva ocorrências iguais, ignora manuais e reimportação, classifica e inclui pendências nos totais', async t => {
   const { store, cardId } = await setup(t);
   const categoryId = store.snapshot('2026-09').categories.find(c => c.name === 'Lazer').id;
@@ -48,7 +89,7 @@ test('atualização v2 faz cópia integral e restauração preserva deduplicaç�
   const cardId = store.saveCard({ name: 'Itaú teste', closingDay: 25, dueDay: 9 });
   store.close();
   const SQL = await require('sql.js')(); const db = new SQL.Database(fs.readFileSync(filename));
-  db.run('DROP TABLE investments; DROP TABLE investment_settings');
+  db.run('DROP TABLE invoice_credits; DROP TABLE investments; DROP TABLE investment_settings');
   db.run('DROP INDEX entries_import_key; ALTER TABLE entries DROP COLUMN import_key; ALTER TABLE entries DROP COLUMN classification_pending; DROP TABLE planned_expense_budgets; ALTER TABLE entries DROP COLUMN planned_expense_id; DROP TABLE planned_expenses; DROP TABLE group_budgets; ALTER TABLE categories DROP COLUMN group_id; DROP TABLE expense_groups; PRAGMA user_version=2');
   const original = Buffer.from(db.export()); fs.writeFileSync(filename, original); db.close();
   store = await openStore(filename);
@@ -91,4 +132,59 @@ test('fatura atualizada preserva compras existentes e inclui somente as novas', 
   const updated = { dueDate: '2026-10-09', entries: [{ ...existing, description: 'Compra existente alterada', sourceCard: '****9999' }, item('Compra nova', 2500)] };
   assert.deepEqual(store.importInvoice({ cardId, invoice: updated }), { imported: 1, duplicates: 1, pending: 1 });
   assert.equal(store.snapshot('2026-10').totals.cardDue, 3500);
+});
+
+
+test('estornos repetidos não duplicam após reexportação e lote inválido reverte tudo', async t => {
+  const { store, cardId } = await setup(t);
+  const credits = [{ description: 'Estorno', purchaseDate: '2026-09-11', amount: 100, sourceCard: 'origem' }, { description: 'Estorno', purchaseDate: '2026-09-11', amount: 100, sourceCard: 'origem' }];
+  const invoice = { dueDate: '2026-10-09', entries: [item('Compra', 2000)], creditEntries: credits };
+  assert.equal(store.importInvoice({ cardId, invoice }).creditsImported, 2);
+  assert.equal(store.snapshot('2026-10').invoices[0].amount, 1800);
+  const reexported = { ...invoice, creditEntries: credits.map(c => ({ ...c, description: 'Descrição alterada', sourceCard: 'outra' })) };
+  assert.equal(store.importInvoice({ cardId, invoice: reexported }).creditsImported, 0);
+  assert.equal(store.snapshot('2026-10').invoices[0].credits.length, 2);
+  assert.throws(() => store.importInvoice({ cardId, invoice: { dueDate: '2026-11-09', entries: [item('Nova compra')], creditEntries: [{ ...credits[0], amount: -1 }] } }), /inválido/);
+  assert.equal(store.snapshot('2026-11').invoices.length, 0);
+});
+
+test('divergência na fatura fechada cancela compras e adiamentos em transação', async t => {
+  const { store, cardId } = await setup(t);
+  const categoryId = store.snapshot('2026-09').categories.find(c => c.name === 'Lazer').id;
+  const manualId = store.saveEntry({ description: 'Compra anterior ausente', type: 'expense', amount: '7', categoryId, paymentMethod: 'credit_card', cardId, purchaseDate: '2026-09-01', dueDate: '2026-10-09' });
+  const invoice = { dueDate: '2026-10-09', entries: [item('Compra confirmada', 2000)], creditEntries: [], isClosed: true, declaredTotal: 2000 };
+  assert.throws(() => store.importInvoice({ cardId, invoice }), /anterior ausente/);
+  const snapshot = store.snapshot('2026-10');
+  assert.equal(snapshot.invoices[0].amount, 700);
+  assert.equal(snapshot.invoices[0].entries[0].id, manualId);
+  assert.throws(() => store.importInvoice({ cardId, invoice: { ...invoice, declaredTotal: 1900 } }), /não confere/);
+  assert.equal(store.snapshot('2026-10').invoices[0].amount, 700);
+});
+
+test('migração v7 para v8 cria backup integral e mantém os registros', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'saldo-v7-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const filename = path.join(dir, 'family.sqlite');
+  let store = await openStore(filename);
+  store.register({ name: 'Teste', username: 'teste', password: 'senha-teste-123' });
+  const cardId = store.saveCard({ name: 'Cartão teste', closingDay: 25, dueDay: 9 });
+  store.importInvoice({ cardId, invoice: { dueDate: '2026-10-09', entries: [item('Compra preservada')] } });
+  store.close();
+  const SQL = await require('sql.js')(); const old = new SQL.Database(fs.readFileSync(filename));
+  const entriesBefore = old.exec('SELECT * FROM entries');
+  old.run('DROP TABLE invoice_credits; PRAGMA user_version=7');
+  const original = Buffer.from(old.export()); fs.writeFileSync(filename, original); old.close();
+  store = await openStore(filename);
+  try {
+    const backup = fs.readdirSync(path.join(dir, 'backups')).find(n => n.startsWith('antes-atualizacao-v7-'));
+    assert.deepEqual(fs.readFileSync(path.join(dir, 'backups', backup)), original);
+    store.login({ username: 'teste', password: 'senha-teste-123' });
+    assert.equal(store.snapshot('2026-10').invoices[0].amount, 1000);
+    const check = new SQL.Database(fs.readFileSync(filename));
+    assert.equal(check.exec('PRAGMA user_version')[0].values[0][0], 8);
+    assert.deepEqual(check.exec('SELECT * FROM entries'), entriesBefore);
+    assert.equal(check.exec('PRAGMA integrity_check')[0].values[0][0], 'ok');
+    assert.equal(check.exec('PRAGMA foreign_key_check').length, 0);
+    check.close();
+  } finally { store.close(); }
 });

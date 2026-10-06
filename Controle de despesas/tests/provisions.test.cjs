@@ -65,7 +65,7 @@ test('migração v6 cria backup integral e conversão persiste com integridade',
   store.savePlannedExpenseBudget({ month: '2026-10', plannedExpenseId, amount: '100' });
   const SQL = await require('sql.js')();
   const old = new SQL.Database(fs.readFileSync(filename));
-  old.run('ALTER TABLE planned_expense_budgets DROP COLUMN realized_entry_id; PRAGMA user_version=6');
+  old.run('DROP TABLE invoice_credits; ALTER TABLE planned_expense_budgets DROP COLUMN realized_entry_id; PRAGMA user_version=6');
   const original = Buffer.from(old.export()); old.close(); fs.writeFileSync(filename, original);
   const upgraded = await openStore(filename);
   upgraded.login({ username: 'teste', password: 'senha-ficticia-123' });

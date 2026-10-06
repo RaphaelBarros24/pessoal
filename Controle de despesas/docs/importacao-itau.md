@@ -1,8 +1,8 @@
-# Importação de fatura Itaú — 0.3.0
+# Importação de fatura Itaú — 0.6.2
 
 1. Cadastre o cartão em **Cartões e faturas**, caso ainda não exista. Use o mesmo cadastro em todas as importações dessa fatura, inclusive cartões adicionais e virtuais que a compõem.
 2. Abra **Importar fatura** e clique em **Selecionar planilha**. Escolha o `.xlsx` exportado pelo Itaú.
-3. Confira a quantidade, o total das compras, os créditos/estornos ignorados e o vencimento. Selecione o cartão correspondente e clique em **Atualizar fatura**.
+3. Confira a quantidade, o total líquido, os créditos/estornos a descontar e o vencimento. Selecione o cartão correspondente e clique em **Atualizar fatura**.
 4. Confira o resultado: importados, duplicados ignorados e pendências. Em **Classificação pendente**, clique em **Classificar**, escolha uma categoria e salve.
 
 O processamento é local. Nome do titular, agência e conta não são copiados para os lançamentos. O identificador de origem usa um hash; o número mascarado presente no arquivo ajuda a distinguir compras iguais em cartões físicos, virtuais ou adicionais.
@@ -21,7 +21,15 @@ As pendências aparecem em todos os meses e já contam nos totais como **A class
 
 Cada linha gera somente a parcela que consta na fatura, com seu valor integral em centavos. Não há geração de parcelas futuras. O vencimento vem da planilha; o mês de orçamento segue a data original da compra mais o número da parcela menos um, como nas compras parceladas cadastradas no aplicativo. Parcelas importadas são independentes e podem ser excluídas individualmente.
 
-Pagamentos efetuados são ignorados para não duplicar despesas e não marcam automaticamente a fatura como paga. Subtotais e dados cadastrais são ignorados. Créditos/estornos também são ignorados, com quantidade e total informados na prévia e no resultado; as compras positivas continuam sendo comparadas e importadas. O crédito deve ser tratado separadamente nesta versão. São aceitos arquivos de até 10 MB e até 5.000 compras no layout conferido do Itaú, com colunas Data, Lançamento, Parcelamento e Valor.
+Pagamentos efetuados são ignorados para não duplicar despesas e não marcam automaticamente a fatura como paga. Subtotais e dados cadastrais são ignorados. Créditos/estornos são registrados separadamente, por ocorrência, e descontados da fatura e de seu pagamento pendente. Reimportação não duplica créditos, mesmo quando descrição ou identificador mascarado mudam. Eles não alteram o valor original das compras nem geram receita no orçamento: a redução é aplicada à fatura. A classificação de estornos por despesa no orçamento permanece fora deste tratamento. São aceitos arquivos de até 10 MB e até 5.000 compras no layout conferido do Itaú, com colunas Data, Lançamento, Parcelamento e Valor.
+
+## Fatura fechada
+
+O título do Excel identifica a fatura fechada. Compras menos estornos precisam conferir exatamente, em centavos, com o campo Valor do cabeçalho. O vencimento oficial da planilha atualiza também os lançamentos já reconhecidos, preservando valores, classificação, orçamento, vínculos e pagamento.
+
+Compras manuais posteriores à última compra do arquivo, ausentes da fatura fechada e no mesmo mês de vencimento, passam para o mês seguinte no mesmo dia informado pelo banco. Elas continuam no orçamento original e mantêm o estado de pagamento. Essa reconciliação é explicada antes de confirmar a importação. Compras anteriores ausentes ou outros lançamentos que impeçam a conciliação cancelam toda a operação, sem excluir dados ou salvar parcialmente. A data exata de fechamento não é inferida nem o cadastro do cartão alterado.
+
+Schema 8 adiciona `invoice_credits` com backup integral anterior obrigatório. Pagamento e reabertura incluem os créditos. Backups antigos continuam migrados e versões futuras são recusadas.
 
 ## Atualização e verificações
 

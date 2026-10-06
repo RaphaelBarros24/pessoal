@@ -1,6 +1,6 @@
 # Contexto do projeto — Saldo Familiar
 
-Atualizado em 2026-10-05. Versão implementada: 0.6.1; instalação pessoal não alterada nesta sessão. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
+Atualizado em 2026-10-06. Versão implementada: 0.6.2; instalação pessoal atualizada e reconciliação da fatura fechada aplicada após backup verificado. Orçamento em três níveis, recuperação administrativa local e carteira de CDBs com projeções e simulador de aportes.
 
 ## Arquitetura
 
@@ -20,7 +20,7 @@ Aplicativo desktop offline para orçamento familiar, em português do Brasil e r
 
 O fluxo é tela → preload → IPC no processo principal → serviço de persistência → resposta para a tela. O processo principal valida a origem do IPC e controla as operações permitidas. A janela usa sandbox, isolamento de contexto e Node desativado no renderer; navegação externa, novas janelas e permissões são bloqueadas. A CSP da interface impede conexões de rede.
 
-O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas, importação e investimentos usam transação e recuperação do estado anterior em caso de erro. O schema atual é 7, com tabelas `users`, `categories`, `entries`, `budgets`, `cards`, `expense_groups`, `group_budgets`, `planned_expenses`, `planned_expense_budgets`, `investments` e `investment_settings`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
+O SQLite é executado em memória por `sql.js`/WASM e exportado integralmente para arquivo temporário, renomeado para `family.sqlite`. Operações de parcelas, importação e investimentos usam transação e recuperação do estado anterior em caso de erro. O schema atual é 8, com tabelas `users`, `categories`, `entries`, `budgets`, `cards`, `expense_groups`, `group_budgets`, `planned_expenses`, `planned_expense_budgets`, `investments`, `investment_settings` e `invoice_credits`; faturas são calculadas a partir dos lançamentos, sem tabela de despesa duplicada.
 
 O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpasta `backups`. Todos os logins do aplicativo compartilham o orçamento na mesma conta do Windows. Contas do Windows distintas usam bancos diferentes. Banco e backups não são criptografados; senhas e códigos de recuperação usam hashes scrypt com salt.
 
@@ -34,7 +34,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Dashboard mensal, histórico de seis meses, filtros e orçamento em três níveis: grupo, despesa planejada e classificação. Cada despesa tem previsão e realizado próprios; itens sem grupo permanecem em “Sem grupo”.
 - Meios de pagamento e acumulados mensais; parcelamento de valor total em até 120 parcelas, com distribuição em centavos e ajuste de dias em meses curtos.
 - Cartões com fechamento/vencimento; faturas por cartão e mês, detalhamento, pagamento/reabertura, edição de parcela e exclusão individual ou da série manual.
-- Importação local de fatura Itaú XLSX, seleção do cartão, prévia, atualização incremental por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Reexportações com descrição ou identificador mascarado alterados usam uma assinatura secundária por ocorrência; créditos/estornos são informados e ignorados sem bloquear as compras positivas. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
+- Importação local de fatura Itaú XLSX, seleção do cartão, prévia, atualização incremental por linha, prevenção de duplicados e classificação por histórico ou regras conservadoras. Reexportações com descrição ou identificador mascarado alterados usam uma assinatura secundária por ocorrência; créditos/estornos são deduplicados e descontados da fatura. Faturas fechadas conferem com o total declarado, usam o vencimento oficial e preservam compras manuais posteriores ausentes no próximo ciclo. Pendências de todos os meses aparecem como A classificar e já consomem orçamento.
 - CSV/PDF, backup manual, backup diário atualizado nas alterações com retenção de 30 cópias diárias e restauração validada com cópia anterior e novo login.
 - Investimentos em CDB prefixado ou percentual do CDI, com objetivos, emissor, liquidez, vencimento, edição/exclusão e histórico de resgates totais pelo valor informado. Painel, projeções, cenários e simulador de aportes; carteira independente do orçamento. Guia: `docs/investimentos-cdb.md`.
 - Migrações de schema 1/2/3/4/5 para 6 com cópia integral anterior obrigatória; preservação dos dados existentes e recusa de bancos futuros.
@@ -51,7 +51,7 @@ O banco fica em `%APPDATA%\Saldo Familiar\family.sqlite`; backups ficam na subpa
 - Edição/exclusão individual afeta somente a parcela escolhida. Para mudar a quantidade de parcelas manuais, excluir a série e cadastrar novamente.
 - Importação cria somente a parcela presente em cada linha, sem antecipar parcelas futuras nem criar uma série vinculada. O vencimento vem da planilha; o mês de orçamento deriva da compra e do número da parcela.
 - Deduplicação usa SHA-256 de campos normalizados da origem e número da ocorrência. Quando a origem muda descrição ou cartão mascarado, a assinatura secundária usa cartão cadastrado, mês da fatura, data, valor, parcela, total de parcelas e ocorrência. Correspondências são vinculadas sem sobrescrever descrição, categoria, notas, valor ou pagamento. A planilha não fornece ID único de transação.
-- Pagamentos e subtotais da planilha são ignorados; pagamentos não quitam automaticamente a fatura. Créditos/estornos também são ignorados, com quantidade e total exibidos; precisam ser tratados separadamente. Limites: 10 MB e 5.000 compras positivas no layout Itaú conferido.
+- Pagamentos e subtotais da planilha são ignorados; pagamentos não quitam automaticamente a fatura. Créditos/estornos reduzem o total e o pagamento pendente da fatura, com detalhe separado; não alteram os valores originais nem a classificação dos gastos no orçamento. Limites: 10 MB e 5.000 compras positivas no layout Itaú conferido.
 - Classificação usa categoria única no histórico; conflito exige classificação manual. Regras locais conservadoras cobrem alimentação, transporte e saúde quando suas categorias existem.
 - Identidade do aplicativo e caminho de dados permanecem estáveis entre versões. Distribuição pela Microsoft Store foi escolhida pelo usuário, mas o pacote atual continua NSIS sem assinatura comercial ou da loja. Consultar o roteiro antes de retomar publicação.
 - O repositório Git fica na pasta superior `Pessoal`; destino autorizado é `origin/master` em `RaphaelBarros24/pessoal`. Versionar somente arquivos deste projeto; dados pessoais, dependências, instaladores e artefatos de teste ficam fora do Git.
@@ -71,7 +71,7 @@ O bug de reimportação de fatura atualizada foi reproduzido e corrigido na vers
 O erro de abertura após excluir despesas planejadas foi reproduzido e corrigido na versão 0.4.3. `sql.js` desativa chaves estrangeiras depois de exportar o banco; por isso toda exportação agora as reativa. O banco local afetado teve cinco previsões órfãs removidas após backup verificado e voltou a passar em integridade e chaves estrangeiras.
 
 - Limitação de deduplicação: valor alterado, outro cartão cadastrado e compras indistinguíveis com a mesma data, valor e parcela exigem conferência; não há identificação inequívoca sem ID de transação na origem.
-- O parser aceita o layout Itaú conferido; outros layouts não são suportados. Créditos/estornos são informados e ignorados, sem reduzir automaticamente a fatura ou o orçamento.
+- O parser aceita o layout Itaú conferido; outros layouts não são suportados. Créditos/estornos reduzem a fatura; associação do estorno a uma classificação/despesa no orçamento não é feita automaticamente.
 - Banco e backups sem criptografia e instalador sem assinatura são limites conhecidos do produto. Houve bloqueio do binário 0.2.0 por política do Windows na sessão anterior; o binário 0.3.0 passou no teste registrado em 2026-09-13.
 - README e requisitos incluem a entrega 0.5.0. O comportamento detalhado da importação Itaú permanece em `docs/importacao-itau.md`.
 
@@ -113,3 +113,8 @@ Versão 0.6.0: 27/27 testes, sintaxe e whitespace aprovados. Interface de desenv
 ## Correção 0.6.1 em 2026-10-05
 
 Cartão de crédito incluído na realização de previsão: seleção do cartão e data da compra, vencimento calculado e pagamento pela fatura. Reserva liberada no mês da previsão, sem duplicar gasto. Schema 7 mantido. Regressão reproduzida antes da correção; 28/28 testes aprovados e interface de desenvolvimento/EXE retornaram `SMOKE_OK`. Desktop/ui empacotados idênticos aos fontes. Instalador 0.6.1 e checksum locais em `release/`. Banco pessoal e instalação não alterados.
+
+
+## Verificação 0.6.2 em 2026-10-06
+
+32/32 testes aprovados, incluindo conciliação, estornos por ocorrência, migração v7→v8 com backup byte a byte e reversão integral de divergências. Interface de desenvolvimento e EXE retornaram `SMOKE_OK`. Pacote e arquivos instalados conferidos com o código testado; versão 0.6.2 em execução. Cópia do banco real e interface passaram na conferência do total líquido. Correção local aplicada após backup integral verificado, com alteração limitada a vencimentos e créditos; vínculos, classificações, orçamento e pagamentos preservados. Integridade e chaves estrangeiras aprovadas no banco ativo. Instalador e checksum em `release/`, fora do Git. Windows 10 e publicação continuam pendentes.

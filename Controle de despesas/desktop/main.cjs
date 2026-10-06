@@ -79,7 +79,7 @@ if (ownsLock) app.whenReady().then(async () => {
         const result = await dialog.showOpenDialog(window, { properties: ['openFile'], filters: [{ name: 'Fatura Itaú Excel', extensions: ['xlsx'] }] });
         if (result.canceled) return { ok: true, value: null };
         invoicePreview = await readItau(result.filePaths[0]);
-        value = { dueDate: invoicePreview.dueDate, count: invoicePreview.entries.length, total: invoicePreview.entries.reduce((sum, e) => sum + e.amount, 0), payments: invoicePreview.payments, credits: invoicePreview.credits, creditTotal: invoicePreview.creditTotal };
+        value = { dueDate: invoicePreview.dueDate, count: invoicePreview.entries.length, total: invoicePreview.netTotal, payments: invoicePreview.payments, credits: invoicePreview.credits, creditTotal: invoicePreview.creditTotal, isClosed: invoicePreview.isClosed };
       }
       else if (operation === 'importInvoice') {
         if (!invoicePreview) throw new Error('Selecione a planilha novamente.');

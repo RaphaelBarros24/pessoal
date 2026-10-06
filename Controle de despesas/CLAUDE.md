@@ -36,13 +36,14 @@ Antes de retomar arquitetura, funcionalidades, limitações ou planejamento, lei
 
 ## Estado da última sessão
 
-### Sessão 2026-10-06 — diagnóstico de diferença na fatura fechada (em andamento)
+### Sessão 2026-10-06 — reconciliação de fatura fechada (0.6.2)
 
-- Comparada em leitura a fatura fechada local com os lançamentos do cartão no mês do vencimento. Todas as compras positivas da planilha estão presentes; três compras manuais fora do arquivo e créditos/estornos ignorados explicam integralmente a diferença.
-- Cadastro do ciclo do cartão diverge das datas da fatura fornecida. Solicitada confirmação do fechamento real e do destino das compras manuais, preservando vínculos de previsões e estado de pagamento.
-- Criado backup integral em `.local-data/`, com igualdade SHA-256 verificada. Banco original íntegro e sem violações de chaves estrangeiras; nenhum lançamento pessoal alterado.
-- Conferência executada pelo parser real e comparação por data, valor e parcela. A soma bruta do parser falha na comparação com o total líquido por ignorar estornos, limitação já documentada. Não houve alteração funcional nem geração de instalador; testes gerais não repetidos nesta etapa de diagnóstico.
-- Pendências: confirmar ciclo e compras com o usuário; definir tratamento dos créditos, simular correção em cópia e obter autorização para a alteração exata no banco pessoal. Dados, descrições, valores, planilha e backup ficam fora do Git.
+- Importação passa a registrar e deduplicar créditos/estornos, descontando-os do total e do pagamento pendente da fatura. Detalhes exibem os créditos separadamente; valores originais e classificações de orçamento são preservados.
+- Fatura fechada valida compras menos créditos contra o total declarado no Excel. Vencimento oficial atualiza compras reconhecidas; compras manuais posteriores ausentes passam ao próximo vencimento, preservando mês de orçamento, vínculos e pagamento. Divergências anteriores abortam a transação inteira. Cadastro do ciclo não foi inferido nem alterado.
+- Schema 8 adiciona `invoice_credits`, com backup integral obrigatório na migração. Reimportação, ocorrências repetidas, pagamento/reabertura, backup/restauração, rollback e migração v7→v8 cobertos. Regressão no parser anterior reproduz total bruto errado; versão corrigida passou.
+- 32/32 testes aprovados, sintaxe e whitespace conferidos; interface de desenvolvimento e EXE empacotado retornaram `SMOKE_OK`. Interface com cópia do banco real exibiu o total líquido e os estornos; captura conferida. Desktop/ui do pacote e arquivos instalados idênticos ao código testado.
+- Instalador 0.6.2 gerado em staging limpo, instalado e versão/processos confirmados. SHA-256: `05a92f9dd433ebb785b6657accbf0b7eb6cd1912c9ac26a67558dcb5b4c080f2`. Reconciliação local aplicada após backups integrais verificados e simulação: somente oito vencimentos e três créditos alterados; outros campos/tabelas preservados. Banco ativo íntegro e sem violações de chaves estrangeiras.
+- Pendências: Windows 10, release pública e Store. Associação dos estornos às despesas/classificações do orçamento não é automática; os descontos se aplicam à fatura. Código/documentação autorizados para commit/push; planilha, bancos, backups, capturas e instaladores fora do Git.
 
 ### Sessão 2026-10-05 — cartão na realização de previsão (0.6.1)
 

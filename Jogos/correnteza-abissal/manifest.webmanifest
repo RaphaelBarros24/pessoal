@@ -1,0 +1,19 @@
+{
+  "name": "Correnteza Abissal",
+  "short_name": "Correnteza",
+  "description": "Atirador de pérolas no fundo do mar: forme trios da mesma cor e segure a correnteza antes do abismo.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#020a12",
+  "theme_color": "#020a12",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

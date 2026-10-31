@@ -54,10 +54,46 @@ Jogo **original** do gênero *marble shooter* (atirador de esferas), o mesmo gê
 | Vidas | 3 vidas, vida extra a cada 15.000 pontos |
 
 ### Trajetos
-`serpentina` (fileiras, lançador embaixo) · `espiral` / `espiralInv` (lançador no centro) · `canion` (espiral retangular) · `gemeas` (**duas correntes ao mesmo tempo**) · `abismo` (espiral fechada).
+`serpentina` (fileiras, lançador embaixo) · `espiral` / `espiralInv` (lançador no centro) · `canion` (espiral retangular) · `gemeas` (**duas filas ao mesmo tempo**) · `abismo` (espiral fechada) · `laco` e `retorno` (**trilhos que se cruzam, com túnel**).
+
+Os túneis são detectados automaticamente: quando o trilho passa por baixo de um trecho anterior, aquele pedaço vira túnel. Ali as esferas ficam escondidas e não podem ser atingidas, e a pista de cima continua jogável.
 
 ### Pontuação
-`pontos = pérolas × 10 × combo + (combo − 1) × 50 + bônus de sequência`, mais um bônus de nível ao concluir.
+`pontos = esferas × 10 × combo + (combo − 1) × 50 + bônus de sequência`, mais um bônus de nível ao concluir.
+
+### Modos de jogo
+| Modo | Regra | Recorde salvo |
+|---|---|---|
+| Campanha | 12 fases + rodadas infinitas mais rápidas | Pontos por fase |
+| Sobrevivência | Fila infinita; velocidade sobe com o tempo; 5ª cor aos 60 s e 6ª aos 150 s; 1 vida | Tempo |
+| Contra o relógio | 2 minutos; combos dão +N s; bônus dourado dá +5 s; deixar a fila cair custa −15 s | Pontos |
+
+### Melhorias (loja)
+A moeda (conchas no tema Oceano, créditos no tema Logística) vem das fases concluídas (1 a cada 100 pontos + 5 por fase) e do fim das partidas nos modos.
+
+| Melhoria | Níveis | Efeito |
+|---|---|---|
+| Mira longa | 3 | Guia de 7 → 11 → 16 pontos → linha completa |
+| Especiais duradouros | 3 | +25% de duração por nível |
+| Explosão ampliada | 3 | Raio 100 → 160 px |
+| Recarga rápida | 3 | Intervalo entre tiros 0,17 → 0,11 s |
+| Sorte grande | 3 | +0,8 p.p. de chance de especial |
+| Vida reserva | 1 | +1 vida inicial |
+
+### Conquistas
+14 conquistas (combos, sequências, fases, túnel, modos, bônus, loja), com aviso na tela ao desbloquear.
+
+### Temas
+| | Oceano | Logística |
+|---|---|---|
+| Lançador | Náutilo | Empilhadeira |
+| Esferas | Pérolas | Volumes (caixas) |
+| Fim do trilho | Abismo | Doca (luz verde/vermelha) |
+| Fases | Profundidades (−300 m → −10.935 m) | Entregas (Taubaté → Brasília) |
+| Especiais | Âncora, Contracorrente, Pulso, Sonar | Freio motor, Marcha a ré, Expedição em lote, Rastreio GPS |
+| Bônus | Pérola dourada | Moeda de frete |
+
+O tema Logística é genérico: não usa marca nem logotipo de nenhuma empresa.
 
 ---
 
@@ -89,10 +125,9 @@ Abra o link no Chrome do celular e jogue. Para ficar como app: menu ⋮ → *Adi
 | `icon.svg`, `icon-192.png`, `icon-512.png` | Ícones |
 
 ## 6. Privacidade (LGPD)
-O jogo não coleta dados pessoais, não usa rede nem analytics. Só guarda no próprio aparelho (`localStorage`) o nível desbloqueado, o recorde e a preferência de som. Para apagar, basta limpar os dados do site no navegador.
+O jogo não coleta dados pessoais, não usa rede nem analytics. Só guarda no próprio aparelho (`localStorage`) progresso, recordes, moedas, melhorias, conquistas, tema e preferência de som. Para apagar, basta limpar os dados do site no navegador.
 
 ## 7. Ideias para próximas versões
-- Mais trajetos com **túneis/pontes** (trilhos que se cruzam).
-- **Modo sobrevivência** (corrente infinita) e **desafio de tempo**.
-- **Loja de melhorias** com pérolas coletadas (ex.: mira mais longa, power-up mais duradouro).
-- Placar local por nível e conquistas.
+- Ranking compartilhado entre amigos/equipe (exige servidor; avaliar LGPD: só apelido, sem dado pessoal).
+- Editor de trilhos.
+- Desafio diário com semente fixa (todos jogam a mesma fila no dia).

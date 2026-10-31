@@ -8,7 +8,7 @@ Casca nativa mínima (uma `WebView` em tela cheia) que empacota o jogo de `../in
 | Android | 7.0+ (minSdk 24), alvo Android 14 (targetSdk 34) |
 | Permissões | Nenhuma (nem internet) |
 | Dados | Só progresso local do jogo, guardado no aparelho |
-| Tamanho | ~2 MB |
+| Tamanho | ~650 KB |
 
 ## Como o APK é gerado
 O workflow `.github/workflows/correnteza-apk.yml` roda a cada push que altera `Jogos/correnteza-abissal/**` (ou manualmente em *Actions → APK Correnteza Abissal → Run workflow*):

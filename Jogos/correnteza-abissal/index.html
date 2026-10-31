@@ -152,7 +152,45 @@ button{font:inherit;color:inherit}
 .stats dt{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mist)}
 .stats dd{margin:2px 0 0;font:800 18px var(--f-display);font-variant-numeric:tabular-nums}
 
-@media (max-width:380px){.card{padding:20px 16px}.grid2 .btn{font-size:13px}}
+/* Jogadores e placar */
+input{-webkit-user-select:text;user-select:text}
+.who{display:flex;align-items:center;gap:10px;width:100%;padding:7px 14px 7px 7px;border:1px solid var(--hair);border-radius:999px;background:rgba(127,211,255,.05);cursor:pointer;text-align:left}
+.who span{flex:1;min-width:0;font-size:13px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who b{color:var(--ink);font-size:15px}
+.who small{color:var(--lure);font-weight:700;font-size:12.5px}
+.who:focus-visible,.pl-pick:focus-visible,.sw:focus-visible,.tabs button:focus-visible{outline:2px solid var(--lure);outline-offset:3px}
+.av{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:800 14px/1 var(--f-display);font-style:normal;color:#06121a;box-shadow:0 0 14px rgba(0,0,0,.35)}
+.pl{display:flex;align-items:center;gap:4px;border:1px solid var(--hair);border-radius:14px;padding-right:4px}
+.pl.on{border-color:var(--lure);background:rgba(255,196,107,.06)}
+.pl-pick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:9px 10px;background:none;border:0;cursor:pointer;text-align:left}
+.pl-pick span{flex:1;min-width:0;display:flex;flex-direction:column}
+.pl-pick b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-pick small{color:var(--mist);font-size:12px;font-variant-numeric:tabular-nums}
+.pl-pick em{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--lure)}
+.pl-edit{padding:8px 12px;font-size:13px}
+.plform{display:flex;flex-direction:column;gap:10px}
+.plform label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mist)}
+.plform input{font:600 16px var(--f-body);color:var(--ink);background:rgba(0,0,0,.28);border:1px solid var(--hair);border-radius:12px;padding:12px 14px;outline:none;width:100%}
+.plform input:focus{border-color:var(--lure)}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.sw.on{border-color:var(--ink);transform:scale(1.1)}
+.err{color:var(--danger)!important;font-size:13px}
+.err:empty{display:none}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;border:1px solid var(--hair);border-radius:12px}
+.tabs button{background:none;border:0;border-radius:8px;padding:8px 2px;font-size:12px;font-weight:700;color:var(--mist);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--lure);color:var(--lure-ink)}
+.rank{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.rank li{display:grid;grid-template-columns:26px 32px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--hair);border-radius:12px}
+.rank li.on{border-color:var(--lure);background:rgba(255,196,107,.06)}
+.rank .pos{font:800 14px var(--f-display);color:var(--mist);text-align:center}
+.rank .m1 .pos{color:#ffd166}.rank .m2 .pos{color:#cfd8dc}.rank .m3 .pos{color:#e0a370}
+.rank b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank span{font:800 14px var(--f-display);font-variant-numeric:tabular-nums;text-align:right}
+.foot-btns{display:flex;gap:2px;flex-wrap:wrap}
+.foot-btns .btn{padding-inline:10px;font-size:13px}
+
+@media (max-width:380px){.card{padding:20px 16px}.grid2 .btn{font-size:13px}.menu{grid-template-columns:minmax(0,1fr)}.menu .gauge{display:none}.title{font-size:clamp(28px,9vw,36px)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -161,7 +199,7 @@ button{font:inherit;color:inherit}
   <header class="hud" id="hud">
     <button class="icon-btn" id="btnPause" aria-label="Pausar"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
     <div class="hud-depth"><b id="hudDepth">−300 m</b><small id="hudZone">Mesopelágica · Nível 1</small></div>
-    <div class="hud-score"><small>Pontos</small><b id="hudScore">0</b></div>
+    <div class="hud-score"><small id="hudWho">Pontos</small><b id="hudScore">0</b></div>
     <div class="lives" id="hudLives" aria-label="Vidas"></div>
     <div class="progress" id="progress"><i id="progressFill"></i></div>
   </header>
@@ -179,6 +217,7 @@ button{font:inherit;color:inherit}
             <i class="mark" id="gaugeMark"></i>
           </div>
           <div class="menu-main">
+            <button class="who" id="btnWho"><span>Jogando como <b id="whoName"></b></span><small>Trocar</small></button>
             <div>
               <div class="eyebrow" id="menuEyebrow"></div>
               <h1 class="title" id="menuTitle"></h1>
@@ -191,13 +230,13 @@ button{font:inherit;color:inherit}
                 <button class="btn" id="btnLevels"><span>Fases</span><small id="lvlCount">1 de 12</small></button>
                 <button class="btn" id="btnShop"><span>Melhorias</span><small id="shopCount">0</small></button>
                 <button class="btn" id="btnAch"><span>Conquistas</span><small id="achCount">0 de 14</small></button>
+                <button class="btn" id="btnBoard"><span>Placar</span><small id="boardCount">1 jogador</small></button>
                 <button class="btn" id="btnHow"><span>Como jogar</span><small>Regras e especiais</small></button>
-                <button class="btn" id="btnSkin"><span>Tema</span><small id="skinName">Oceano</small></button>
               </div>
             </div>
             <div class="menu-foot">
               <span>Recorde <b id="bestScore">0</b></span>
-              <button class="btn ghost" id="btnSound">Som: ligado</button>
+              <span class="foot-btns"><button class="btn ghost" id="btnSkin">Tema: <span id="skinName">Oceano</span></button><button class="btn ghost" id="btnSound">Som: ligado</button></span>
             </div>
           </div>
         </div>
@@ -252,6 +291,38 @@ button{font:inherit;color:inherit}
         <h2 id="howTitle"></h2>
         <div id="howBody" class="btns"></div>
         <button class="btn primary" data-back>Entendi</button>
+      </div>
+    </section>
+
+    <section class="layer" id="players" hidden>
+      <div class="card">
+        <div class="eyebrow">Jogadores</div>
+        <h2 id="plHead">Quem vai jogar?</h2>
+        <p id="plIntro">Cada jogador tem progresso, pontuação, recordes, moedas, melhorias e conquistas separados.</p>
+        <div class="scroll" id="plList"></div>
+        <form class="plform" id="plForm" hidden novalidate>
+          <label for="plName">Apelido</label>
+          <input id="plName" name="plName" maxlength="16" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="Ex.: Lucas">
+          <label id="plColorLabel">Cor</label>
+          <div class="swatches" id="plColors" role="radiogroup" aria-labelledby="plColorLabel"></div>
+          <p>Use um apelido. Ele fica só neste aparelho e não é enviado para lugar nenhum.</p>
+          <p class="err" id="plErr" role="alert"></p>
+          <div class="grid2"><button type="button" class="btn" id="plCancel">Cancelar</button><button type="submit" class="btn primary" id="plSave">Criar jogador</button></div>
+          <button type="button" class="btn ghost" id="plDelete" hidden>Excluir jogador</button>
+        </form>
+        <button class="btn" id="plAdd">Novo jogador</button>
+        <button class="btn ghost" id="plBack" data-back>Voltar</button>
+      </div>
+    </section>
+
+    <section class="layer" id="board" hidden>
+      <div class="card">
+        <div class="eyebrow">Placar da casa</div>
+        <h2>Quem está na frente</h2>
+        <div class="tabs" role="tablist" id="boardTabs"></div>
+        <ol class="rank" id="rankList"></ol>
+        <p id="boardHint"></p>
+        <button class="btn ghost" data-back>Voltar</button>
       </div>
     </section>
 
@@ -392,11 +463,38 @@ const SKINS = {
 };
 
 /* ================= Armazenamento local ================= */
-const KEY = 'correnteza-abissal.v1';
-let save = { unlocked: 1, best: 0, sound: true, skin: 'oceano', shells: 0, up: {}, ach: {}, stats: { pearls: 0, powers: [] }, records: { surv: null, time: 0 }, lvBest: {} };
-try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) for (const k in save) if (s[k] !== undefined) save[k] = s[k]; } catch (e) {}
-if (!SKINS[save.skin]) save.skin = 'oceano';
-function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) {} }
+// v1 = um único progresso (versões antigas); v2 = vários jogadores, cada um com o seu.
+const KEY_V1 = 'correnteza-abissal.v1', KEY = 'correnteza-abissal.v2', MAX_PLAYERS = 8;
+const AV_COLORS = ['#36e2ff', '#ff5b7a', '#a6f046', '#ffbe3d', '#a487ff', '#ff8c42', '#4fd1c5', '#f2eeff'];
+function DEFAULT_SAVE() { return { unlocked: 1, best: 0, sound: true, skin: 'oceano', shells: 0, up: {}, ach: {}, stats: { pearls: 0, powers: [] }, records: { surv: null, time: 0 }, lvBest: {} }; }
+function normalize(src) {
+  const d = DEFAULT_SAVE();
+  if (src && typeof src === 'object') for (const k in d) if (src[k] !== undefined && src[k] !== null) d[k] = src[k];
+  d.stats = Object.assign({ pearls: 0, powers: [] }, d.stats);
+  d.records = Object.assign({ surv: null, time: 0 }, d.records);
+  if (!Array.isArray(d.stats.powers)) d.stats.powers = [];
+  if (!SKINS[d.skin]) d.skin = 'oceano';
+  return d;
+}
+const newId = () => 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+let store = { active: null, profiles: {} };
+try { const s2 = JSON.parse(localStorage.getItem(KEY)); if (s2 && s2.profiles) store = s2; } catch (e) {}
+if (!Object.keys(store.profiles).length) {
+  try {
+    const s1 = JSON.parse(localStorage.getItem(KEY_V1));
+    if (s1) { const id = newId(); store.profiles[id] = { name: 'Jogador 1', color: 0, created: Date.now(), data: s1 }; store.active = id; store.migrated = true; }
+  } catch (e) {}
+}
+for (const id in store.profiles) {
+  const p = store.profiles[id];
+  p.data = normalize(p.data); p.name = String(p.name || 'Jogador').slice(0, 16); p.color = (p.color | 0) % AV_COLORS.length;
+}
+if (!store.profiles[store.active]) store.active = Object.keys(store.profiles)[0] || null;
+let save = store.active ? store.profiles[store.active].data : DEFAULT_SAVE();
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+if (store.migrated) { delete store.migrated; persist(); }
+const prof = () => store.profiles[store.active] || null;
+const playerCount = () => Object.keys(store.profiles).length;
 const upL = id => save.up[id] || 0;
 let SK = SKINS[save.skin], SKIN = save.skin;
 
@@ -882,6 +980,7 @@ function setupBoard(cfg) {
   buildBg(); showLayer(null); G.state = 'play'; hudDirty = true; hudCache = '';
 }
 function prepRun() {
+  G.houseDone = false;
   G.maxCombo = 0; G.hits = 0; G.shotsFired = 0; G.resume = null;
   audio();
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
@@ -1277,9 +1376,10 @@ function updateHUD() {
     main = mmss(Math.ceil(G.modeT)); zone = 'Contra o relógio'; prog = Math.min(1, G.modeT / 120);
   }
   const lowTime = G.mode === 'relogio' && G.modeT <= 10;
-  const key = [main, zone, G.score, G.lives, Math.round(prog * 100), G.danger > .82, G.mode, SKIN].join('|');
+  const who = playerCount() > 1 && prof() ? prof().name : 'Pontos';
+  const key = [main, zone, G.score, G.lives, Math.round(prog * 100), G.danger > .82, G.mode, SKIN, who].join('|');
   if (key === hudCache) return; hudCache = key;
-  hud.depth.textContent = main; hud.zone.textContent = zone;
+  hud.depth.textContent = main; hud.zone.textContent = zone; $('hudWho').textContent = who;
   hud.depth.style.color = lowTime ? 'var(--danger)' : '';
   hud.score.textContent = fmt(G.score);
   hud.lives.hidden = G.mode === 'relogio';
@@ -1297,7 +1397,8 @@ function banner(top, main, sub) {
 }
 function showLayer(id) { for (const el of document.querySelectorAll('.layer')) el.hidden = el.id !== id; }
 function showResult(o) {
-  $('resEyebrow').textContent = o.eyebrow; $('resTitle').textContent = o.title; $('resSub').textContent = o.sub;
+  houseRecordCheck();
+  $('resEyebrow').textContent = (playerCount() > 1 && prof() ? prof().name + ' · ' : '') + o.eyebrow; $('resTitle').textContent = o.title; $('resSub').textContent = o.sub;
   $('resStats').innerHTML = o.stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   const p = $('resPrimary'), s = $('resSecondary');
   p.textContent = o.primary[0]; p.onclick = o.primary[1];
@@ -1319,6 +1420,10 @@ function toMenu() {
   G.state = 'menu'; G.shots = [];
   if (!G.chains.length || G.mode !== 'campanha') idleBoard();
   buildBg();
+  const pl = prof();
+  if (!pl) { openPlayers(true); return; }
+  const chip = $('btnWho'); chip.querySelector('.av')?.remove(); chip.prepend(avatar(pl)); $('whoName').textContent = pl.name;
+  $('boardCount').textContent = playerCount() + (playerCount() === 1 ? ' jogador' : ' jogadores');
   const unlocked = Math.min(save.unlocked, LEVELS.length);
   $('menuGrid').classList.toggle('no-gauge', SKIN !== 'oceano');
   $('menuEyebrow').textContent = SK.eyebrow;
@@ -1456,6 +1561,150 @@ $('btnLevels').onclick = () => { buildLevelList(); showLayer('levels'); };
 $('btnShop').onclick = () => { buildShop(); showLayer('shop'); };
 $('btnAch').onclick = () => { buildAch(); showLayer('achs'); };
 $('btnHow').onclick = () => { buildHow(); showLayer('how'); };
+/* ================= Jogadores e placar ================= */
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function avatar(p) {
+  const el = document.createElement('i'); el.className = 'av';
+  el.style.background = AV_COLORS[p.color % AV_COLORS.length];
+  el.textContent = (p.name.trim()[0] || '?').toUpperCase();
+  el.setAttribute('aria-hidden', 'true');
+  return el;
+}
+let plEdit = null, plColor = 0, delArm = 0, delTimer = 0;
+function openPlayers(forceCreate) {
+  $('plForm').hidden = true; buildPlayers(); showLayer('players');
+  if (forceCreate || !playerCount()) openForm('new');
+}
+function buildPlayers() {
+  const ids = Object.keys(store.profiles), list = $('plList');
+  list.innerHTML = '';
+  $('plHead').textContent = ids.length ? 'Quem vai jogar?' : 'Crie o primeiro jogador';
+  for (const id of ids) {
+    const p = store.profiles[id], d = p.data, row = document.createElement('div');
+    row.className = 'pl' + (id === store.active ? ' on' : '');
+    const pick = document.createElement('button');
+    pick.className = 'pl-pick'; pick.appendChild(avatar(p));
+    const txt = document.createElement('span');
+    txt.innerHTML = `<b>${esc(p.name)}</b><small>Fase ${Math.min(d.unlocked, LEVELS.length)} de ${LEVELS.length} · Recorde ${fmt(d.best)}</small>`;
+    pick.appendChild(txt);
+    if (id === store.active) { const tag = document.createElement('em'); tag.textContent = 'Jogando'; pick.appendChild(tag); }
+    pick.onclick = () => selectProfile(id);
+    const ed = document.createElement('button');
+    ed.className = 'btn ghost pl-edit'; ed.textContent = 'Editar'; ed.setAttribute('aria-label', 'Editar ' + p.name);
+    ed.onclick = () => openForm(id);
+    row.append(pick, ed); list.appendChild(row);
+  }
+  list.hidden = !ids.length;
+  $('plAdd').hidden = ids.length >= MAX_PLAYERS;
+  $('plBack').hidden = !store.active;
+  $('plIntro').hidden = false;
+}
+function openForm(id) {
+  plEdit = id;
+  const p = id === 'new' ? null : store.profiles[id];
+  $('plForm').hidden = false; $('plAdd').hidden = true; $('plList').hidden = true; $('plBack').hidden = true;
+  $('plHead').textContent = p ? 'Editar jogador' : (playerCount() ? 'Novo jogador' : 'Crie o primeiro jogador');
+  $('plName').value = p ? p.name : '';
+  plColor = p ? p.color : playerCount() % AV_COLORS.length;
+  $('plSave').textContent = p ? 'Salvar' : 'Criar jogador';
+  $('plDelete').hidden = !p; $('plDelete').textContent = 'Excluir jogador'; delArm = 0;
+  $('plCancel').hidden = !playerCount();
+  $('plSave').parentElement.style.gridTemplateColumns = playerCount() ? '' : 'minmax(0,1fr)';
+  $('plErr').textContent = '';
+  drawSwatches();
+  setTimeout(() => { try { $('plName').focus({ preventScroll: true }); } catch (e) {} }, 60);
+}
+function closeForm() { $('plForm').hidden = true; buildPlayers(); }
+function drawSwatches() {
+  const box = $('plColors'); box.innerHTML = '';
+  AV_COLORS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw' + (i === plColor ? ' on' : ''); b.style.background = c;
+    b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(i === plColor)); b.setAttribute('aria-label', 'Cor ' + (i + 1));
+    b.onclick = () => { plColor = i; drawSwatches(); };
+    box.appendChild(b);
+  });
+}
+$('plForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('plName').value.trim().replace(/\s+/g, ' ').slice(0, 16);
+  if (!name) { $('plErr').textContent = 'Digite um apelido para o jogador.'; return; }
+  const dup = Object.entries(store.profiles).some(([id, p]) => id !== plEdit && p.name.toLowerCase() === name.toLowerCase());
+  if (dup) { $('plErr').textContent = 'Já existe um jogador com esse apelido. Escolha outro.'; return; }
+  if (plEdit === 'new') {
+    if (playerCount() >= MAX_PLAYERS) { $('plErr').textContent = 'Limite de ' + MAX_PLAYERS + ' jogadores neste aparelho.'; return; }
+    const id = newId(), data = DEFAULT_SAVE();
+    data.sound = save.sound; data.skin = SKIN;
+    store.profiles[id] = { name, color: plColor, created: Date.now(), data };
+    persist(); selectProfile(id); toast('Jogador criado', name);
+  } else {
+    const p = store.profiles[plEdit]; p.name = name; p.color = plColor; persist(); closeForm();
+  }
+});
+$('plCancel').onclick = closeForm;
+$('plAdd').onclick = () => openForm('new');
+$('plDelete').onclick = () => {
+  if (!delArm) {
+    delArm = 1; $('plDelete').textContent = 'Toque de novo para excluir (apaga o progresso)';
+    clearTimeout(delTimer); delTimer = setTimeout(() => { delArm = 0; $('plDelete').textContent = 'Excluir jogador'; }, 4000);
+    return;
+  }
+  delArm = 0; clearTimeout(delTimer);
+  const id = plEdit; delete store.profiles[id];
+  if (store.active === id) {
+    store.active = Object.keys(store.profiles)[0] || null;
+    save = store.active ? store.profiles[store.active].data : DEFAULT_SAVE();
+    G.resume = null; setSkin(save.skin);
+  }
+  persist(); $('plForm').hidden = true; buildPlayers();
+  if (!store.active) openForm('new');
+};
+function selectProfile(id) {
+  if (!store.profiles[id]) return;
+  const changed = store.active !== id;
+  store.active = id; save = store.profiles[id].data; persist();
+  if (changed) G.resume = null;
+  setSkin(save.skin); idleBoard(); toMenu();
+}
+function houseRecordCheck() {
+  if (G.houseDone || !prof()) return;
+  const others = Object.entries(store.profiles).filter(([id]) => id !== store.active);
+  if (!others.length) return;
+  const top = Math.max(...others.map(([, p]) => p.data.best));
+  if (G.score > 0 && G.score > top) { G.houseDone = true; toast('Recorde da casa', prof().name + ' passou todo mundo: ' + fmt(G.score)); }
+}
+const BOARDS = {
+  geral: ['Recorde', d => d.best, d => fmt(d.best)],
+  campanha: ['Campanha', d => Math.min(d.unlocked, LEVELS.length) * 1e7 + Object.values(d.lvBest).reduce((a, b) => a + b, 0), d => 'Fase ' + Math.min(d.unlocked, LEVELS.length)],
+  surv: ['Sobreviv.', d => d.records.surv ? d.records.surv.t : 0, d => d.records.surv ? mmss(d.records.surv.t) : '—'],
+  time: ['Relógio', d => d.records.time || 0, d => d.records.time ? fmt(d.records.time) : '—']
+};
+let boardTab = 'geral';
+function buildBoard() {
+  const tabs = $('boardTabs'); tabs.innerHTML = '';
+  for (const k in BOARDS) {
+    const b = document.createElement('button');
+    b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(k === boardTab)); b.textContent = BOARDS[k][0];
+    b.onclick = () => { boardTab = k; buildBoard(); };
+    tabs.appendChild(b);
+  }
+  const [, metric, show] = BOARDS[boardTab];
+  const rows = Object.entries(store.profiles).map(([id, p]) => ({ id, p, v: metric(p.data) })).sort((a, b) => b.v - a.v);
+  const list = $('rankList'); list.innerHTML = '';
+  rows.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.className = (r.id === store.active ? 'on ' : '') + (r.v > 0 && i < 3 ? 'm' + (i + 1) : '');
+    li.innerHTML = `<i class="pos">${i + 1}º</i>`;
+    li.appendChild(avatar(r.p));
+    const n = document.createElement('b'); n.textContent = r.p.name; li.appendChild(n);
+    const v = document.createElement('span'); v.textContent = show(r.p.data); li.appendChild(v);
+    list.appendChild(li);
+  });
+  const hints = { geral: 'Maior pontuação numa única partida, em qualquer modo.', campanha: 'Fase mais funda liberada; empate desempata pela soma dos recordes de fase.', surv: 'Maior tempo aguentado no modo Sobrevivência.', time: 'Maior pontuação no modo Contra o relógio.' };
+  $('boardHint').textContent = hints[boardTab] + (rows.length < 2 ? ' Crie outros jogadores em "Trocar" para comparar.' : '');
+}
+$('btnWho').onclick = () => openPlayers(false);
+$('btnBoard').onclick = () => { buildBoard(); showLayer('board'); };
 $('btnSkin').onclick = () => { setSkin(SKIN === 'oceano' ? 'logistica' : 'oceano'); toMenu(); };
 $('mCamp').onclick = () => $('btnPlay').onclick();
 $('mSurv').onclick = () => startMode('sobrevivencia');
@@ -1470,6 +1719,7 @@ window.__androidBack = () => {
   if (G.state === 'play') { pause(); return true; }
   if (G.state === 'paused') { resume(); return true; }
   const open = [...document.querySelectorAll('.layer')].find(l => !l.hidden);
+  if (open && open.id === 'players' && !store.active) return false;
   if (open && open.id !== 'menu') { toMenu(); return true; }
   return false;
 };

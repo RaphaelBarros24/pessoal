@@ -80,6 +80,15 @@ A moeda (conchas no tema Oceano, créditos no tema Logística) vem das fases con
 | Sorte grande | 3 | +0,8 p.p. de chance de especial |
 | Vida reserva | 1 | +1 vida inicial |
 
+### Jogadores (vários perfis no mesmo aparelho)
+- Até 8 jogadores por aparelho, cada um com apelido e cor.
+- Cada jogador tem **progresso, pontuação, recordes, moedas, melhorias, conquistas, tema e som separados**.
+- **Placar da casa** compara todos: recorde geral, fase da campanha, tempo na Sobrevivência e pontos no Contra o relógio.
+- Aviso de **"Recorde da casa"** quando alguém passa a maior pontuação dos outros.
+- Troca pelo botão "Trocar" no topo do menu. Excluir pede dois toques e apaga só o progresso daquele jogador.
+- Quem já jogava na versão anterior vira automaticamente o "Jogador 1", sem perder nada (pode renomear em Trocar → Editar).
+- Os perfis ficam **só no aparelho**: o placar compara quem joga no mesmo celular, não entre celulares diferentes.
+
 ### Conquistas
 14 conquistas (combos, sequências, fases, túnel, modos, bônus, loja), com aviso na tela ao desbloquear.
 
@@ -129,7 +138,7 @@ Abra o link no Chrome do celular e jogue. Para ficar como app: menu ⋮ → *Adi
 | `android/` | Projeto do app Android (WebView) que gera o instalador APK |
 
 ## 6. Privacidade (LGPD)
-O jogo não coleta dados pessoais, não usa rede nem analytics. Só guarda no próprio aparelho (`localStorage`) progresso, recordes, moedas, melhorias, conquistas, tema e preferência de som. Para apagar, basta limpar os dados do site no navegador.
+O jogo não coleta dados pessoais, não usa rede nem analytics. Só guarda no próprio aparelho (`localStorage`) os perfis de jogador (apelido e cor) e, de cada um, progresso, recordes, moedas, melhorias, conquistas, tema e preferência de som. A tela de criação orienta a usar **apelido** (minimização de dados, útil com crianças). Excluir um jogador apaga os dados dele; desinstalar o app ou limpar os dados do site apaga tudo.
 
 ## 7. Ideias para próximas versões
 - Ranking compartilhado entre amigos/equipe (exige servidor; avaliar LGPD: só apelido, sem dado pessoal).

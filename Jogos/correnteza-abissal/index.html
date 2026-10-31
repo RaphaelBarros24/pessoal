@@ -1465,6 +1465,15 @@ for (const b of document.querySelectorAll('[data-back]')) b.onclick = toMenu;
 
 /* ================= Início ================= */
 if (location.hash === '#debug') window.__G = G;
+// Ganchos do app Android: botão Voltar e app em segundo plano.
+window.__androidBack = () => {
+  if (G.state === 'play') { pause(); return true; }
+  if (G.state === 'paused') { resume(); return true; }
+  const open = [...document.querySelectorAll('.layer')].find(l => !l.hidden);
+  if (open && open.id !== 'menu') { toMenu(); return true; }
+  return false;
+};
+window.__androidPause = () => pause();
 function boot(data) {
   if (data && data.level) G.resume = { level: data.level, score: data.score || 0, lives: data.lives || 3 };
   document.body.dataset.skin = SKIN;

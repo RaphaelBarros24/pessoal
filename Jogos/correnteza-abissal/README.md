@@ -99,6 +99,9 @@ O tema Logística é genérico: não usa marca nem logotipo de nenhuma empresa.
 
 ## 3. Como jogar no Android
 
+**Opção 0: instalador APK (app nativo, offline)**
+Baixe o `.apk` do Release mais recente (`correnteza-v1.0.N`) em github.com/RaphaelBarros24/pessoal/releases e instale. Detalhes, assinatura e como gerar novas versões em [`android/README.md`](android/README.md).
+
 **Opção A: link do artifact (mais rápido)**
 Abra o link no Chrome do celular e jogue. Para ficar como app: menu ⋮ → *Adicionar à tela inicial*.
 
@@ -123,6 +126,7 @@ Abra o link no Chrome do celular e jogue. Para ficar como app: menu ⋮ → *Adi
 | `manifest.webmanifest` | Metadados de instalação (PWA) |
 | `sw.js` | Cache offline |
 | `icon.svg`, `icon-192.png`, `icon-512.png` | Ícones |
+| `android/` | Projeto do app Android (WebView) que gera o instalador APK |
 
 ## 6. Privacidade (LGPD)
 O jogo não coleta dados pessoais, não usa rede nem analytics. Só guarda no próprio aparelho (`localStorage`) progresso, recordes, moedas, melhorias, conquistas, tema e preferência de som. Para apagar, basta limpar os dados do site no navegador.

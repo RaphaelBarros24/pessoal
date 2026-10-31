@@ -1,0 +1,9 @@
+.gradle/
+build/
+app/build/
+local.properties
+*.apk
+*.aab
+# Chave de assinatura: nunca versionar (o repositório é público)
+keystore/*.jks
+keystore/*.keystore

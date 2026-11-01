@@ -93,16 +93,25 @@ A moeda (conchas no tema Oceano, créditos no tema Logística) vem das fases con
 14 conquistas (combos, sequências, fases, túnel, modos, bônus, loja), com aviso na tela ao desbloquear.
 
 ### Temas
-| | Oceano | Logística |
-|---|---|---|
-| Lançador | Náutilo | Empilhadeira |
-| Esferas | Pérolas | Volumes (caixas) |
-| Fim do trilho | Abismo | Doca (luz verde/vermelha) |
-| Fases | Profundidades (−300 m → −10.935 m) | Entregas (Taubaté → Brasília) |
-| Especiais | Âncora, Contracorrente, Pulso, Sonar | Freio motor, Marcha a ré, Expedição em lote, Rastreio GPS |
-| Bônus | Pérola dourada | Moeda de frete |
+Troque em **Tema** no rodapé do menu (Oceano → Logística → Magia). Cada jogador guarda o seu.
 
-O tema Logística é genérico: não usa marca nem logotipo de nenhuma empresa.
+| | Oceano | Logística | Magia (Academia Arcana) |
+|---|---|---|---|
+| Lançador | Náutilo | Empilhadeira | **Varinha** de madeira entalhada sobre um círculo de runas giratório; o orbe da vez brilha na ponta |
+| Mira | Pontos | Pontos | Faíscas douradas em forma de estrela |
+| Esferas | Pérolas | Volumes (caixas) | Orbes de cristal (safira, rubi, esmeralda, topázio, ametista, pedra-da-lua) com símbolos alquímicos |
+| Fim do trilho | Abismo | Doca (luz verde/vermelha) | Caldeirão borbulhando (verde; vermelho no perigo) |
+| Cenário | Fundo do mar, neve marinha | Pátio de cargas | Castelo à noite com janelas acesas, lua crescente, estrelas, velas flutuantes e faíscas subindo |
+| Túnel | Rocha | Viaduto | Arco de pedra |
+| Fases | Profundidades (−300 m → −10.935 m) | Entregas (Taubaté → Brasília) | 12 salas em 4 anos letivos (Portões do Castelo → Torre do Arquimago) |
+| Especiais | Âncora, Contracorrente, Pulso, Sonar | Freio motor, Marcha a ré, Expedição em lote, Rastreio GPS | Ampulheta, Feitiço reverso, Explosão arcana, Olho de coruja |
+| Bônus | Pérola dourada | Moeda de frete | Grimório voador (bate as páginas) |
+| Moeda da loja | Conchas | Créditos | Cristais |
+| Fonte de títulos | Unbounded | Unbounded | Cinzel (serifa clássica) |
+
+Os temas são genéricos. Logística não usa marca nem logotipo de nenhuma empresa.
+
+**Sobre o tema Magia e propriedade intelectual:** ele foi pedido "ao estilo Harry Potter", mas usa só elementos comuns ao gênero escola de magia (varinha, castelo, caldeirão, velas, grimório, corujas, runas), compartilhados por muitas obras (Strixhaven, Witchbrook, Wizard101, Ikenfell). **Não usa** nomes, casas, brasões, personagens, feitiços, lugares, fontes ou itens característicos da franquia (pomo de ouro, cicatriz em raio, chapéu seletor, moedas próprias etc.). O cuidado vale porque o repositório e o APK são públicos, e a Warner Bros. já enviou notificações a eventos de fãs pelo uso de "nomes, lugares ou objetos" da série.
 
 ---
 

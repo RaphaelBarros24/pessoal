@@ -48,7 +48,7 @@ Jogo **original** do gênero *marble shooter* (atirador de esferas), o mesmo gê
 | Esferas | **Pérolas bioluminescentes** com símbolo próprio por cor (acessível para daltonismo) |
 | Buraco | **Abismo**: vórtice que pulsa em vermelho no perigo |
 | Mundos | **Zonas oceânicas reais**: Mesopelágica → Batipelágica → Abissopelágica → Hadal |
-| Fases | 12 profundidades, de −300 m até −10.935 m (Fossa das Marianas), depois "Maré infinita" |
+| Fases | **Infinitas**, em capítulos de 15. Profundidade de −150 m até −10.935 m (Fossa das Marianas) na fase 60, depois "Expedições" |
 | Power-ups | Âncora (lento 6 s), Contracorrente (ré 3 s), Pulso (explosão), Sonar (mira completa + tiro rápido 10 s) |
 | Bônus | Pérola dourada flutuante (+300) |
 | Vidas | 3 vidas, vida extra a cada 15.000 pontos |
@@ -64,7 +64,7 @@ Os túneis são detectados automaticamente: quando o trilho passa por baixo de u
 ### Modos de jogo
 | Modo | Regra | Recorde salvo |
 |---|---|---|
-| Campanha | 12 fases + rodadas infinitas mais rápidas | Pontos por fase |
+| Campanha | **Fases infinitas** em capítulos de 15; cada capítulo concluído dá uma medalha (conquista) | Pontos por fase |
 | Sobrevivência | Fila infinita; velocidade sobe com o tempo; 5ª cor aos 60 s e 6ª aos 150 s; 1 vida | Tempo |
 | Contra o relógio | 2 minutos; combos dão +N s; bônus dourado dá +5 s; deixar a fila cair custa −15 s | Pontos |
 
@@ -90,7 +90,7 @@ A moeda (conchas no tema Oceano, créditos no tema Logística) vem das fases con
 - Os perfis ficam **só no aparelho**: o placar compara quem joga no mesmo celular, não entre celulares diferentes.
 
 ### Conquistas
-14 conquistas (combos, sequências, fases, túnel, modos, bônus, loja), com aviso na tela ao desbloquear.
+15 conquistas de desafio (combos, sequências, fases, túnel, modos, bônus, loja, Lume Dourado) **mais uma medalha a cada capítulo de 15 fases**: Bronze, Prata, Ouro, Platina, Diamante, Rubi, Safira, Esmeralda, Obsidiana e depois Lendário 1, 2, 3… Aviso na tela ao desbloquear.
 
 ### Temas
 Troque em **Tema** no rodapé do menu (Oceano → Logística → Magia). Cada jogador guarda o seu.
@@ -99,19 +99,19 @@ Troque em **Tema** no rodapé do menu (Oceano → Logística → Magia). Cada jo
 |---|---|---|---|
 | Lançador | Náutilo | Empilhadeira | **Varinha** de madeira entalhada sobre um círculo de runas giratório; o orbe da vez brilha na ponta |
 | Mira | Pontos | Pontos | Faíscas douradas em forma de estrela |
-| Esferas | Pérolas | Volumes (caixas) | Orbes de cristal (safira, rubi, esmeralda, topázio, ametista, pedra-da-lua) com símbolos alquímicos |
+| Esferas | Pérolas | Volumes (caixas) | Orbes de vidro com um objeto mágico dentro, um por cor: **orbe estelar** (azul), **chama de fênix** (vermelho), **folha de mandrágora** (verde), **sol dourado** (amarelo), **lua mística** (roxo), **pena de coruja** (branco). Forma diferente por cor (acessível para daltonismo) |
 | Fim do trilho | Abismo | Doca (luz verde/vermelha) | Caldeirão borbulhando (verde; vermelho no perigo) |
-| Cenário | Fundo do mar, neve marinha | Pátio de cargas | Castelo à noite com janelas acesas, lua crescente, estrelas, velas flutuantes e faíscas subindo |
+| Cenário | Fundo do mar, neve marinha | Pátio de cargas | **Um cenário por capítulo** (8, depois recomeçam como "Ano 9, 10…"): Castelo ao Luar (velas flutuantes), Floresta Encantada (vaga-lumes, cogumelos que brilham), Masmorra das Poções (tochas, prateleiras de frascos), Biblioteca Flutuante (livros voando), Lago Congelado (aurora, neve caindo), Observatório Astral (constelações, planeta com anel, cometas), Picos do Dragão (lava, brasas subindo) e Ilhas nas Nuvens (ilhas flutuantes, arco-íris). Cada um com cor de trilho, arco de túnel e líquido do caldeirão próprios |
 | Túnel | Rocha | Viaduto | Arco de pedra |
-| Fases | Profundidades (−300 m → −10.935 m) | Entregas (Taubaté → Brasília) | 12 salas em 4 anos letivos (Portões do Castelo → Torre do Arquimago) |
+| Fases | Profundidades (−150 m → −10.935 m → Expedições) | Rotas de 15 entregas: ímpares Taubaté → Brasília, pares na volta | 5 locais por cenário × I, II, III (ex.: "Trilha dos Vaga-lumes II") |
 | Especiais | Âncora, Contracorrente, Pulso, Sonar | Freio motor, Marcha a ré, Expedição em lote, Rastreio GPS | Ampulheta, Feitiço reverso, Explosão arcana, Olho de coruja |
-| Bônus | Pérola dourada | Moeda de frete | Grimório voador (bate as páginas) |
+| Bônus | Pérola dourada | Moeda de frete | Grimório voador (+300) e, raro, o **Lume Dourado**: vaga-lume dourado que cruza a tela voando rápido (+1.500; +8 s no Contra o relógio) |
 | Moeda da loja | Conchas | Créditos | Cristais |
 | Fonte de títulos | Unbounded | Unbounded | Cinzel (serifa clássica) |
 
 Os temas são genéricos. Logística não usa marca nem logotipo de nenhuma empresa.
 
-**Sobre o tema Magia e propriedade intelectual:** ele foi pedido "ao estilo Harry Potter", mas usa só elementos comuns ao gênero escola de magia (varinha, castelo, caldeirão, velas, grimório, corujas, runas), compartilhados por muitas obras (Strixhaven, Witchbrook, Wizard101, Ikenfell). **Não usa** nomes, casas, brasões, personagens, feitiços, lugares, fontes ou itens característicos da franquia (pomo de ouro, cicatriz em raio, chapéu seletor, moedas próprias etc.). O cuidado vale porque o repositório e o APK são públicos, e a Warner Bros. já enviou notificações a eventos de fãs pelo uso de "nomes, lugares ou objetos" da série.
+**Sobre o tema Magia e propriedade intelectual:** ele foi pedido "ao estilo Harry Potter", mas usa só elementos comuns ao gênero escola de magia (varinha, castelo, caldeirão, velas, grimório, corujas, runas), compartilhados por muitas obras (Strixhaven, Witchbrook, Wizard101, Ikenfell). **Não usa** nomes, casas, brasões, personagens, feitiços, lugares, fontes ou itens característicos da franquia (pomo de ouro, cicatriz em raio, chapéu seletor, moedas próprias etc.). O pedido de "bola de ouro" virou o **Lume Dourado**: a mesma emoção de caçar um alvo dourado veloz, mas com desenho próprio (vaga-lume de quatro asas e cauda luminosa, não uma esfera alada). O cuidado vale porque o repositório e o APK são públicos, e a Warner Bros. já enviou notificações a eventos de fãs pelo uso de "nomes, lugares ou objetos" da série.
 
 ---
 

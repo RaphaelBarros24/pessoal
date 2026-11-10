@@ -135,6 +135,9 @@ button{font:inherit;color:inherit}
 .item span{grid-column:1;color:var(--mist);font-size:12.5px}
 .item .btn{grid-column:2;grid-row:1/span 3;padding:9px 14px;font-size:13px;white-space:nowrap}
 .pips{grid-column:1;display:flex;gap:4px}
+.item .lvtag{grid-column:1;color:var(--lure);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.item span.next{color:var(--glow);opacity:.85}
+.item .btn{grid-row:1/span 4}
 .pips i{width:20px;height:4px;border-radius:2px;background:var(--hair)}
 .pips i.on{background:var(--lure)}
 .ach{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:center;padding:9px 12px;border-radius:12px;border:1px solid var(--hair)}
@@ -431,14 +434,33 @@ const MAGIC_COLORS = ['#4fc3ff', '#ff4d6d', '#3ddc84', '#f5c542', '#b26bff', '#f
 function applyPalette() { const pal = SKIN === 'magia' ? MAGIC_COLORS : BASE_COLORS; COLORS.forEach((c, i) => { c[0] = pal[i]; }); }
 const DISPLAY_FONT = () => SKIN === 'magia' ? 'Cinzel, Georgia, serif' : 'Unbounded, "Trebuchet MS", sans-serif';
 const MODE_LAYOUTS = ['serpentina', 'espiral', 'espiralInv', 'canion', 'gemeas', 'abismo', 'laco', 'retorno'];
+// Melhorias sem limite de nível: o preço cresce em progressão geométrica e o efeito
+// cresce com retorno decrescente (os níveis 1–3 mantêm os valores das versões anteriores).
+const after3 = (lv, rate) => lv <= 3 ? 0 : 1 - Math.pow(rate, lv - 3);
+const UP = {
+  aimDots: lv => [7, 11, 16][lv] || 0,
+  sonarStart: lv => lv <= 3 ? 0 : 30 * after3(lv, .88),
+  dur: lv => lv <= 3 ? 1 + .25 * lv : 1.75 + .75 * after3(lv, .85),
+  rad: lv => Math.round(lv <= 3 ? 100 + 20 * lv : 160 + 60 * after3(lv, .85)),
+  cool: lv => lv <= 3 ? .17 * (1 - .12 * lv) : .1088 * (.6 + .4 * Math.pow(.85, lv - 3)),
+  luck: lv => lv <= 3 ? .008 * lv : .024 + .026 * after3(lv, .88),
+  lives: lv => Math.min(lv, 2),
+  lifeEvery: lv => lv <= 2 ? 15000 : Math.max(6000, Math.round(15000 * Math.pow(.9, lv - 2) / 500) * 500),
+  income: lv => 1 + .1 * lv
+};
+const dec = (v, d) => v.toFixed(d).replace('.', ',');
 const UPG = [
-  { id: 'mira', name: 'Mira longa', label: 'Guia de mira', states: ['7 pontos', '11 pontos', '16 pontos', 'linha completa'], cost: [30, 70, 140] },
-  { id: 'duracao', name: 'Especiais duradouros', label: 'Duração de lento, ré e mira', states: ['100%', '125%', '150%', '175%'], cost: [40, 90, 160] },
-  { id: 'pulso', name: 'Explosão ampliada', label: 'Raio da explosão', states: ['100 px', '120 px', '140 px', '160 px'], cost: [40, 90, 160] },
-  { id: 'recarga', name: 'Recarga rápida', label: 'Intervalo entre tiros', states: ['0,17 s', '0,15 s', '0,13 s', '0,11 s'], cost: [30, 70, 140] },
-  { id: 'sorte', name: 'Sorte grande', label: 'Chance de especial na fila', states: ['3,0%', '3,8%', '4,6%', '5,4%'], cost: [50, 110, 200] },
-  { id: 'vida', name: 'Vida reserva', label: 'Vidas iniciais (campanha / sobrevivência)', states: ['3 / 1', '4 / 2'], cost: [250] }
+  { id: 'mira', name: 'Mira longa', label: 'Guia de mira', base: 30, growth: 1.45,
+    show: lv => lv < 3 ? UP.aimDots(lv) + ' pontos' : 'linha completa' + (UP.sonarStart(lv) ? ' + sonar de ' + dec(UP.sonarStart(lv), 1) + ' s no início' : '') },
+  { id: 'duracao', name: 'Especiais duradouros', label: 'Duração de lento, ré e mira', base: 40, growth: 1.45, show: lv => Math.round(UP.dur(lv) * 100) + '%' },
+  { id: 'pulso', name: 'Explosão ampliada', label: 'Raio da explosão', base: 40, growth: 1.45, show: lv => UP.rad(lv) + ' px' },
+  { id: 'recarga', name: 'Recarga rápida', label: 'Intervalo entre tiros', base: 30, growth: 1.45, show: lv => dec(UP.cool(lv), 3) + ' s' },
+  { id: 'sorte', name: 'Sorte grande', label: 'Chance extra de especial', base: 50, growth: 1.45, show: lv => '+' + dec(UP.luck(lv) * 100, 1) + '%' },
+  { id: 'vida', name: 'Vida reserva', label: 'Vidas e vida extra', base: 250, growth: 1.7, show: lv => (3 + UP.lives(lv)) + ' vidas · extra a cada ' + fmt(UP.lifeEvery(lv)) + ' pts' },
+  { id: 'renda', name: 'Bolsa cheia', label: 'Moedas ganhas por partida', base: 60, growth: 1.45, show: lv => '+' + Math.round((UP.income(lv) - 1) * 100) + '%' }
 ];
+const upCost = (u, lv) => Math.round(u.base * Math.pow(u.growth, lv) / 5) * 5;
+const upTotal = () => UPG.reduce((a, u) => a + upL(u.id), 0);
 const ACH = [
   ['trio', 'Primeiro trio', 'Estoure 3 ou mais da mesma cor.'],
   ['combo3', 'Reação em cadeia', 'Faça um combo ×3.'],
@@ -454,7 +476,8 @@ const ACH = [
   ['sobrev2', 'Resistência', 'Sobreviva 2 minutos no modo Sobrevivência.'],
   ['relogio10', 'Contra o tempo', 'Faça 10.000 pontos no Contra o relógio.'],
   ['loja', 'Primeira melhoria', 'Compre uma melhoria.'],
-  ['lume', 'Lume Dourado', 'Capture o Lume Dourado no tema Magia.']
+  ['lume', 'Lume Dourado', 'Capture o Lume Dourado no tema Magia.'],
+  ['up20', 'Equipamento lendário', 'Some 20 níveis de melhorias na loja.']
 ];
 
 /* ================= Utilidades ================= */
@@ -677,7 +700,7 @@ const G = {
 };
 const pointer = { mode: null, hover: false };
 
-function powerChance(base) { return base + .008 * upL('sorte'); }
+function powerChance(base) { return base + UP.luck(upL('sorte')); }
 const LAYOUT_CYCLE = ['serpentina', 'espiral', 'canion', 'gemeas', 'laco', 'espiralInv', 'retorno', 'abismo'];
 function oceanDepth(n) { if (n >= 60) return 10935; return Math.round((150 + 10785 * Math.pow((n - 1) / 59, 1.5)) / 10) * 10; }
 function zoneOf(d) { for (const [name, , b] of ZONES) if (d <= b) return name; return 'Hadal'; }
@@ -688,9 +711,10 @@ function levelCfg(n) {
     cfg = { layout: L.layout, colors: L.colors, balls: L.balls.slice(), speed: L.speed };
   } else {
     // Depois das 12 fases ajustadas à mão, a dificuldade sobe devagar e estabiliza.
-    const k = n - LEVELS.length, layout = LAYOUT_CYCLE[(n * 5) % LAYOUT_CYCLE.length];
-    const balls = Math.min(90, 70 + Math.round(k * 1.0)), speed = Math.min(44, 36 + Math.pow(k, .7) * .8);
-    cfg = { layout, colors: 6, balls: layout === 'gemeas' ? [Math.round(balls * .46), Math.round(balls * .46)] : [balls], speed: layout === 'gemeas' ? speed * .82 : speed };
+    const k = n - LEVELS.length, layout = LAYOUT_CYCLE[(n * 5) % LAYOUT_CYCLE.length], lk = Math.log(1 + k);
+    const balls = Math.round(70 + 11 * lk), speed = 36 + 2.6 * lk;
+    cfg = { layout, colors: 6, balls: layout === 'gemeas' ? [Math.round(balls * .46), Math.round(balls * .46)] : [balls], speed: layout === 'gemeas' ? speed * .82 : speed,
+            intro: Math.min(.42, .26 + .035 * lk) };
   }
   cfg.d = oceanDepth(n);
   cfg.zone = n >= 60 ? 'Hadal · Fossa das Marianas' : zoneOf(cfg.d);
@@ -1105,7 +1129,7 @@ function updateChain(ch, dt) {
   }
   if (!b.length) return;
   const head = b[b.length - 1].s;
-  if (ch.intro && head >= p.len * .26) ch.intro = false;
+  if (ch.intro && head >= p.len * (G.cfg.intro || .26)) ch.intro = false;
   let v = ch.intro ? 320 : G.cfg.speed;
   if (!ch.intro) { if (G.slowT > 0) v *= .35; if (head > p.len * .82) v *= .6; }
   if (G.revT > 0 && !ch.intro) { const rv = 85 * dt; for (const ball of b) ball.s -= rv; }
@@ -1172,12 +1196,12 @@ function removeRange(ch, l, r) {
 function triggerPower(p, x, y) {
   sfx.power();
   floatText(VW / 2, VH * .42, SK.pwFx[p], '#ffffff', 24, 1.6);
-  const dur = 1 + .25 * upL('duracao');
+  const dur = UP.dur(upL('duracao'));
   if (p === 'slow') G.slowT = 6 * dur;
   else if (p === 'reverse') G.revT = 3 * dur;
   else if (p === 'aim') G.aimT = 10 * dur;
   else if (p === 'burst') {
-    const rad = 100 + 20 * upL('pulso');
+    const rad = UP.rad(upL('pulso'));
     G.rings.push({ x, y, t: 0, life: .45, rad });
     const chained = []; let count = 0;
     for (const ch of G.chains) {
@@ -1213,7 +1237,7 @@ function fire() {
   const a = G.shooter.angle, sp = G.aimT > 0 ? SHOT_SPEED * 1.35 : SHOT_SPEED;
   G.shots.push({ x: G.shooter.x + Math.cos(a) * 36, y: G.shooter.y + Math.sin(a) * 36, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: G.ammo[0] });
   G.ammo[0] = G.ammo[1]; G.ammo[1] = pickAmmo();
-  const base = .17 * (1 - .12 * upL('recarga'));
+  const base = UP.cool(upL('recarga'));
   G.cool = G.aimT > 0 ? Math.min(.1, base) : base;
   G.shotsFired++; G.hintT = Math.min(G.hintT, 1.5);
   sfx.shoot();
@@ -1308,8 +1332,8 @@ function collectPearl() {
 function addScore(n) {
   G.score += n;
   while (G.score >= G.nextLife) {
-    G.nextLife += LIFE_EVERY;
-    if (G.mode !== 'relogio' && G.lives < 5) { G.lives++; floatText(G.shooter.x, G.shooter.y - 70, 'Vida extra', '#ffc46b', 20, 1.4); sfx.life(); }
+    G.nextLife += lifeEvery();
+    if (G.mode !== 'relogio' && G.lives < 6) { G.lives++; floatText(G.shooter.x, G.shooter.y - 70, 'Vida extra', '#ffc46b', 20, 1.4); sfx.life(); }
   }
   hudDirty = true;
 }
@@ -1317,7 +1341,8 @@ function burst(x, y, col, n) {
   for (let i = 0; i < n; i++) { const a = rnd(0, TAU), v = rnd(40, 190); G.parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, life: rnd(.35, .7), c: col, r: rnd(1.5, 4) }); }
 }
 function floatText(x, y, txt, col, size = 18, life = 1) { G.texts.push({ x, y, txt, col, size, t: 0, life }); }
-function award(n) { n = Math.max(0, Math.floor(n)); save.shells += n; persist(); return n; }
+const lifeEvery = () => UP.lifeEvery(upL('vida'));
+function award(n) { n = Math.max(0, Math.floor(n * UP.income(upL('renda')))); save.shells += n; persist(); return n; }
 const toastQ = []; let toastBusy = false;
 function toast(top, main) { toastQ.push([top, main]); if (!toastBusy) nextToast(); }
 function nextToast() {
@@ -1348,6 +1373,7 @@ function setupBoard(cfg) {
   G.chains = paths.map((p, i) => ({ path: p, balls: [], toSpawn: cfg.balls[i], total: cfg.balls[i], intro: true, prevC: -1, run: 0, combo: 0 }));
   G.shots = []; G.parts = []; G.texts = []; G.rings = [];
   G.slowT = G.revT = G.aimT = G.cool = 0; G.pearl = null; G.lume = null; G.lumeSeen = false; G.streak = 0; G.danger = 0;
+  G.aimT = UP.sonarStart(upL('mira'));
   G.pearlTimer = G.mode === 'relogio' ? rnd(8, 12) : rnd(12, 20);
   G.ammo = [ri(cfg.colors), ri(cfg.colors)];
   G.hasTunnel = paths.some(p => p.tunnels.length > 0);
@@ -1359,10 +1385,10 @@ function prepRun() {
   audio();
   try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => {}); } catch (e) {}
 }
-function startGame(level, score = 0, lives = 3 + upL('vida')) {
+function startGame(level, score = 0, lives = 3 + UP.lives(upL('vida'))) {
   prepRun();
   G.mode = 'campanha'; G.score = score; G.lives = lives; G.cleanStreak = 0;
-  G.nextLife = (Math.floor(score / LIFE_EVERY) + 1) * LIFE_EVERY;
+  G.nextLife = (Math.floor(score / lifeEvery()) + 1) * lifeEvery();
   startLevel(level);
 }
 function startLevel(n) {
@@ -1373,8 +1399,8 @@ function startLevel(n) {
 }
 function startMode(mode) {
   prepRun();
-  G.mode = mode; G.score = 0; G.level = 0; G.levelScore0 = 0; G.nextLife = LIFE_EVERY;
-  G.lives = mode === 'sobrevivencia' ? 1 + upL('vida') : 1;
+  G.mode = mode; G.score = 0; G.level = 0; G.levelScore0 = 0; G.nextLife = lifeEvery();
+  G.lives = mode === 'sobrevivencia' ? 1 + UP.lives(upL('vida')) : 1;
   G.modeT = mode === 'relogio' ? 120 : 0;
   G.modeScene = ri(MAGIC_SCENES.length);
   setupBoard(modeCfg(mode));
@@ -1958,20 +1984,21 @@ function buildModes() {
 }
 function buildShop() {
   $('wallet').textContent = fmt(save.shells); $('walletLabel').textContent = SK.Currency;
-  $('shopNote').textContent = 'Você ganha ' + SK.currency + ' ao concluir fases (1 a cada 100 pontos, mais 5 por fase) e ao fim de cada partida nos modos.';
+  $('shopNote').textContent = 'Sem limite de níveis: cada nível custa mais e melhora um pouco menos que o anterior. As fases também ficam mais difíceis sem parar. Você ganha ' + SK.currency + ' ao concluir fases e ao fim das partidas nos modos.';
   const list = $('shopList'); list.innerHTML = '';
   for (const u of UPG) {
-    const lv = upL(u.id), max = u.cost.length, done = lv >= max, cost = done ? 0 : u.cost[lv];
+    const lv = upL(u.id), cost = upCost(u, lv);
     const el = document.createElement('div'); el.className = 'item';
-    el.innerHTML = `<b>${u.name}</b><span>${u.label}: ${u.states[lv]}${done ? '' : ' → ' + u.states[lv + 1]}</span><div class="pips">${Array.from({ length: max }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</div>`;
+    el.innerHTML = `<b>${u.name}</b><small class="lvtag">Nível ${lv}</small><span>${u.label}: ${u.show(lv)}</span><span class="next">Próximo: ${u.show(lv + 1)}</span>`;
     const btn = document.createElement('button');
-    btn.className = 'btn' + (done ? '' : ' primary');
-    btn.disabled = done || save.shells < cost;
-    btn.textContent = done ? 'Máximo' : fmt(cost) + ' ' + SK.currency;
+    btn.className = 'btn primary';
+    btn.disabled = save.shells < cost;
+    btn.textContent = fmt(cost) + ' ' + SK.currency;
+    btn.setAttribute('aria-label', 'Comprar ' + u.name + ' nível ' + (lv + 1) + ' por ' + fmt(cost) + ' ' + SK.currency);
     btn.onclick = () => {
-      if (save.shells < cost || done) return;
+      if (save.shells < cost) return;
       save.shells -= cost; save.up[u.id] = lv + 1; persist();
-      sfx.life(); unlock('loja'); buildShop();
+      sfx.life(); unlock('loja'); if (upTotal() >= 20) unlock('up20'); buildShop();
     };
     el.appendChild(btn); list.appendChild(el);
   }

@@ -68,17 +68,36 @@ Os túneis são detectados automaticamente: quando o trilho passa por baixo de u
 | Sobrevivência | Fila infinita; velocidade sobe com o tempo; 5ª cor aos 60 s e 6ª aos 150 s; 1 vida | Tempo |
 | Contra o relógio | 2 minutos; combos dão +N s; bônus dourado dá +5 s; deixar a fila cair custa −15 s | Pontos |
 
-### Melhorias (loja)
-A moeda (conchas no tema Oceano, créditos no tema Logística) vem das fases concluídas (1 a cada 100 pontos + 5 por fase) e do fim das partidas nos modos.
+### Melhorias (loja) — sem limite de níveis
+A moeda (conchas no Oceano, créditos na Logística, cristais na Magia) vem das fases concluídas (1 a cada 100 pontos + 5 por fase) e do fim das partidas nos modos, multiplicada pela melhoria "Bolsa cheia".
 
-| Melhoria | Níveis | Efeito |
-|---|---|---|
-| Mira longa | 3 | Guia de 7 → 11 → 16 pontos → linha completa |
-| Especiais duradouros | 3 | +25% de duração por nível |
-| Explosão ampliada | 3 | Raio 100 → 160 px |
-| Recarga rápida | 3 | Intervalo entre tiros 0,17 → 0,11 s |
-| Sorte grande | 3 | +0,8 p.p. de chance de especial |
-| Vida reserva | 1 | +1 vida inicial |
+Toda melhoria pode subir **para sempre**. O preço cresce 45% a cada nível (70% na Vida reserva) e o efeito cresce **cada vez menos**, aproximando-se de um teto. Assim sempre há algo para comprar sem o jogo ficar trivial. Os níveis 1 a 3 têm os mesmos valores das versões anteriores, então quem já tinha comprado não perde nada.
+
+| Melhoria | Nível 0 | Nível 3 | Nível 10 | Tende a |
+|---|---|---|---|---|
+| Mira longa | 7 pontos | linha completa | + sonar de 17,7 s no início da fase | sonar de 30 s |
+| Especiais duradouros | 100% | 175% | 226% | 250% |
+| Explosão ampliada | 100 px | 160 px | 201 px | 220 px |
+| Recarga rápida (intervalo) | 0,17 s | 0,109 s | 0,079 s | 0,065 s |
+| Sorte grande (chance extra) | +0% | +2,4% | +3,9% | +5% |
+| Vida reserva | 3 vidas | 5 vidas | 5 vidas, extra a cada 6.500 pts | extra a cada 6.000 pts |
+| Bolsa cheia (moedas) | +0% | +30% | +100% | +10% por nível, sem teto |
+
+Conquista nova: **Equipamento lendário** (somar 20 níveis de melhorias).
+
+### Dificuldade sem teto
+Depois das 12 fases ajustadas à mão, cada fase fica um pouco mais difícil que a anterior, para sempre, em ritmo que desacelera (escala logarítmica):
+
+| Fase | Esferas | Velocidade | Fila entra até |
+|---|---|---|---|
+| 13 | 78 | 37,8 | 28% do trilho |
+| 22 | 96 | 42,2 | 34% |
+| 62 | 113 | 46,2 | 40% |
+| 112 | 121 | 48,0 | 42% |
+| 312 | 133 | 50,8 | 42% |
+| 1012 | 146 | 54,0 | 42% |
+
+As melhorias crescem cada vez menos e as fases continuam endurecendo: em algum ponto cada jogador encontra o seu limite, e o placar da casa mostra quem foi mais longe.
 
 ### Jogadores (vários perfis no mesmo aparelho)
 - Até 8 jogadores por aparelho, cada um com apelido e cor.
